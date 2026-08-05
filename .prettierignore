@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Next.js
+.next/
+out/
+dist/
+
+# Testing
+coverage/
+.vitest/
+playwright-report/
+test-results/
+
+# Build artifacts
+*.tsbuildinfo
+
+# OS
+.DS_Store
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.iml
