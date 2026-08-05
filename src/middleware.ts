@@ -1,33 +1,50 @@
 import { type NextRequest, NextResponse } from 'next/server';
-
-// Define protected route patterns
-const protectedRoutes = ['/dashboard'];
+import { createServerClient } from '@supabase/ssr';
 
 export async function middleware(request: NextRequest) {
-  const pathname = request.nextUrl.pathname;
-
-  // Check if the request is for a protected route
-  const isProtectedRoute = protectedRoutes.some((route) =>
-    pathname.startsWith(route)
-  );
-
-  if (!isProtectedRoute) {
-    return NextResponse.next();
-  }
-
-  // For protected routes, check if user is authenticated
   try {
-    // Note: This is a server middleware, so we need to work with headers
-    // We'll let the protected page/component handle actual auth verification
-    // This middleware just ensures session refresh
-    return NextResponse.next({
+    // Refresh session for all requests using @supabase/ssr pattern
+    // This keeps the session cookie up-to-date
+    const response = NextResponse.next({
       request: {
         headers: request.headers,
       },
     });
+
+    // Create a Supabase client with request/response cookies
+    // This handles cookie-based session management
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookies) {
+            cookies.forEach(({ name, value }) => {
+              response.cookies.set(name, value, {
+                path: '/',
+                maxAge: 60 * 60 * 24 * 365 * 100,
+              });
+            });
+          },
+        },
+      }
+    );
+
+    // Call getUser to refresh the session
+    // This triggers Supabase to refresh the session if needed
+    await supabase.auth.getUser();
+
+    // Protected route enforcement still happens in page/layout components
+    // This middleware only handles cookie-based session refresh
+
+    return response;
   } catch (err) {
     console.error('Middleware error:', err);
-    // On error, let the page handle the auth check
+    // Continue even if session refresh fails
+    // Page-level auth checks will handle authentication enforcement
     return NextResponse.next();
   }
 }

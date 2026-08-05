@@ -44,12 +44,14 @@ export async function signInWithPassword(
     if (error) {
       return { error: error.message };
     }
-
-    redirect('/dashboard');
   } catch (err) {
     console.error('Sign in error:', err);
     return { error: 'Failed to sign in. Please try again.' };
   }
+
+  // Redirect after successful authentication, outside try/catch
+  // so Next.js redirect exception is not intercepted
+  redirect('/dashboard');
 }
 
 export async function signOut(): Promise<void> {
@@ -61,6 +63,8 @@ export async function signOut(): Promise<void> {
     console.error('Sign out error:', err);
   }
 
+  // Redirect after sign out, outside try/catch
+  // so Next.js redirect exception is not intercepted
   redirect('/auth/login');
 }
 
