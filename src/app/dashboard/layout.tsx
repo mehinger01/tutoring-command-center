@@ -1,10 +1,20 @@
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import { getAuthUser } from '@/lib/auth/actions';
+import { LogoutButton } from '@/components/LogoutButton';
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Server-side authentication check
+  const user = await getAuthUser();
+
+  if (!user) {
+    redirect('/auth/login');
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-white dark:bg-gray-950">
       <header className="border-b border-gray-200 dark:border-gray-800">
@@ -16,12 +26,10 @@ export default function DashboardLayout({
             Tutoring Command Center
           </Link>
           <nav className="flex items-center gap-6">
-            <a
-              href="/api/auth/logout"
-              className="text-sm text-gray-600 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
-            >
-              Sign out
-            </a>
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              {user.email}
+            </span>
+            <LogoutButton />
           </nav>
         </div>
       </header>
