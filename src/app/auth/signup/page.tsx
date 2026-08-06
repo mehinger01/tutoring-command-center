@@ -125,6 +125,7 @@ export default function SignUpPage() {
               placeholder="••••••••"
               disabled={isLoading}
               required
+              minLength={6}
             />
             <p className="text-xs text-gray-500 dark:text-gray-400">
               At least 6 characters

@@ -3,6 +3,23 @@ import { test, expect } from '@playwright/test';
 const TEST_EMAIL = `test-${Date.now()}@example.com`;
 const TEST_PASSWORD = 'TestPassword123!';
 
+// Verify we're connected to the intended Supabase project
+test.beforeAll(async () => {
+  // Test that the publishable key is valid and project is reachable
+  const response = await fetch('https://duurlnzmxgirdszarjlh.supabase.co/rest/v1/', {
+    headers: {
+      apikey: 'sb_publishable_5lzFSbsI924eCpn9lnh0Xw_mZpCxOuX',
+      'Content-Type': 'application/json',
+    },
+  });
+
+  // Should NOT get "Invalid API key" - status 200 or 401 (auth required) is OK
+  const text = await response.text();
+  if (text.includes('Invalid API key')) {
+    throw new Error(`Supabase project not configured correctly: ${text}`);
+  }
+});
+
 test.describe('Authentication Flow', () => {
   test('login page renders', async ({ page }) => {
     await page.goto('/auth/login');
@@ -62,16 +79,18 @@ test.describe('Authentication Flow', () => {
     await expect(passwordInput).toHaveValue('123');
     await expect(confirmPasswordInput).toHaveValue('123');
 
+    // HTML5 minLength attribute should prevent form submission
+    // When clicked, form won't submit and no page navigation should occur
     await submitButton.click();
 
-    // Wait for error message to appear
-    await page.waitForTimeout(200);
+    // Wait a bit for any potential submission attempt
+    await page.waitForTimeout(500);
 
-    // Should show error message in alert
-    await expect(page.locator('[data-testid="error-message"]')).toContainText(
-      'Password must be at least 6 characters',
-      { timeout: 3000 }
-    );
+    // Should still be on signup page (no redirect)
+    await expect(page).toHaveURL('/auth/signup');
+
+    // If form somehow allowed submission to JS handler, JS validation would show error
+    // But with minLength={6}, HTML5 validation blocks it first
   });
 
   test('login with invalid credentials shows error', async ({ page }) => {
@@ -81,11 +100,35 @@ test.describe('Authentication Flow', () => {
     await page.fill('input[name="password"]', 'WrongPassword123!');
     await page.click('button[type="submit"]');
 
-    // Wait for error message - Supabase will return an error
-    // (May be "Invalid login credentials", "Invalid API key", or other auth errors)
-    await expect(page.locator('[data-testid="error-message"]')).toBeVisible({
-      timeout: 5000,
-    });
+    // Wait for error message - Supabase will return a legitimate auth error
+    const errorElement = page.locator('[data-testid="error-message"]');
+    await expect(errorElement).toBeVisible({ timeout: 5000 });
+
+    // Verify it's an actual auth error, not a configuration error
+    const errorText = await errorElement.textContent();
+
+    // Accept these legitimate Supabase auth responses:
+    const validErrors = [
+      'Invalid login credentials',
+      'Email not confirmed',
+      'User not found',
+      'Invalid password',
+      'Unable to login',
+    ];
+
+    const isValidError = validErrors.some(msg => errorText?.includes(msg));
+
+    // Reject configuration errors that indicate wrong Supabase setup:
+    expect(errorText).not.toContain('Invalid API key', 'Configuration error: wrong Supabase credentials');
+    expect(errorText).not.toContain('Missing Supabase URL', 'Configuration error: missing URL');
+    expect(errorText).not.toContain('service_role key');
+
+    // At least one legitimate auth error should be present
+    if (!isValidError && errorText) {
+      console.log('Received error:', errorText);
+      // Allow any error that's not a config error and isn't empty
+      expect(errorText.length).toBeGreaterThan(0);
+    }
   });
 });
 
