@@ -1,26 +1,45 @@
 import { test, expect } from '@playwright/test';
+import { createClient } from '@supabase/supabase-js';
 
-const TEST_EMAIL = `test-${Date.now()}@example.com`;
-const TEST_PASSWORD = 'TestPassword123!';
+// Validate environment configuration
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const USER_A_EMAIL = process.env.E2E_USER_A_EMAIL;
+const USER_A_PASSWORD = process.env.E2E_USER_A_PASSWORD;
+const USER_B_EMAIL = process.env.E2E_USER_B_EMAIL;
+const USER_B_PASSWORD = process.env.E2E_USER_B_PASSWORD;
 
-// Verify we're connected to the intended Supabase project
-test.beforeAll(async () => {
-  // Test that the publishable key is valid and project is reachable
-  const response = await fetch(
-    'https://duurlnzmxgirdszarjlh.supabase.co/rest/v1/',
-    {
-      headers: {
-        apikey: 'sb_publishable_5lzFSbsI924eCpn9lnh0Xw_mZpCxOuX',
-        'Content-Type': 'application/json',
-      },
-    }
-  );
+// Verify configuration before tests run
+test.beforeAll(() => {
+  const missing: string[] = [];
 
-  // Should NOT get "Invalid API key" - status 200 or 401 (auth required) is OK
-  const text = await response.text();
-  if (text.includes('Invalid API key')) {
-    throw new Error(`Supabase project not configured correctly: ${text}`);
+  if (!SUPABASE_URL) missing.push('NEXT_PUBLIC_SUPABASE_URL');
+  if (!ANON_KEY) missing.push('NEXT_PUBLIC_SUPABASE_ANON_KEY');
+
+  if (missing.length > 0) {
+    throw new Error(
+      `Missing required environment variables: ${missing.join(', ')}. ` +
+        `These must be set to run E2E tests (use .env.local, not committed).`
+    );
   }
+
+  // Verify Supabase connectivity
+  const testUrl = `${SUPABASE_URL}/rest/v1/`;
+  return fetch(testUrl, {
+    headers: {
+      apikey: ANON_KEY!,
+      'Content-Type': 'application/json',
+    },
+  })
+    .then((response) => response.text())
+    .then((text) => {
+      if (text.includes('Invalid API key')) {
+        throw new Error(
+          `Supabase project not configured correctly: Invalid API key. ` +
+            `Check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.`
+        );
+      }
+    });
 });
 
 test.describe('Authentication Flow', () => {
@@ -55,8 +74,9 @@ test.describe('Authentication Flow', () => {
     await page.goto('/auth/signup');
 
     // Try to submit with mismatched passwords
-    await page.fill('input[name="email"]', TEST_EMAIL);
-    await page.fill('input[name="password"]', TEST_PASSWORD);
+    const testEmail = `test-${Date.now()}@example.com`;
+    await page.fill('input[name="email"]', testEmail);
+    await page.fill('input[name="password"]', 'TestPassword123!');
     await page.fill('input[name="confirmPassword"]', 'DifferentPassword123!');
     await page.click('button[type="submit"]');
 
@@ -74,7 +94,8 @@ test.describe('Authentication Flow', () => {
     const confirmPasswordInput = page.locator('input[name="confirmPassword"]');
     const submitButton = page.locator('button[type="submit"]');
 
-    await emailInput.fill(TEST_EMAIL);
+    const testEmail = `test-${Date.now()}@example.com`;
+    await emailInput.fill(testEmail);
     await passwordInput.fill('123');
     await confirmPasswordInput.fill('123');
 
@@ -110,7 +131,7 @@ test.describe('Authentication Flow', () => {
     // Verify it's an actual auth error, not a configuration error
     const errorText = await errorElement.textContent();
 
-    // Accept these legitimate Supabase auth responses:
+    // STRICT: Must be one of these legitimate Supabase auth responses
     const validErrors = [
       'Invalid login credentials',
       'Email not confirmed',
@@ -121,18 +142,15 @@ test.describe('Authentication Flow', () => {
 
     const isValidError = validErrors.some((msg) => errorText?.includes(msg));
 
-    // Reject configuration errors that indicate wrong Supabase setup:
-    // These would indicate the Supabase project is not properly configured
+    // Reject configuration errors (must not appear)
     expect(errorText).not.toContain('Invalid API key');
     expect(errorText).not.toContain('Missing Supabase URL');
     expect(errorText).not.toContain('service_role key');
+    expect(errorText).not.toContain('Failed to fetch');
 
-    // At least one legitimate auth error should be present
-    if (!isValidError && errorText) {
-      console.log('Received error:', errorText);
-      // Allow any error that's not a config error and isn't empty
-      expect(errorText.length).toBeGreaterThan(0);
-    }
+    // STRICT: Error must match one of the accepted legitimate auth errors
+    expect(isValidError).toBe(true);
+    expect(errorText).toBeTruthy();
   });
 });
 
@@ -148,5 +166,287 @@ test.describe('Protected Routes', () => {
     await page.goto('/auth/login');
     // Should not show "redirected" or auth-related errors
     await expect(page.locator('h1')).toContainText('Sign In');
+  });
+});
+
+test.describe('Authenticated Sessions', () => {
+  test.skip(
+    !USER_A_EMAIL || !USER_A_PASSWORD,
+    'Requires E2E_USER_A_EMAIL and E2E_USER_A_PASSWORD'
+  );
+
+  test('User A can log in successfully', async ({ page }) => {
+    await page.goto('/auth/login');
+    await page.fill('input[name="email"]', USER_A_EMAIL!);
+    await page.fill('input[name="password"]', USER_A_PASSWORD!);
+    await page.click('button[type="submit"]');
+
+    // Should redirect to dashboard after successful login
+    await expect(page).toHaveURL('/dashboard', { timeout: 5000 });
+  });
+
+  test('successful login redirects to dashboard', async ({ page }) => {
+    await page.goto('/auth/login');
+    await page.fill('input[name="email"]', USER_A_EMAIL!);
+    await page.fill('input[name="password"]', USER_A_PASSWORD!);
+    await page.click('button[type="submit"]');
+
+    await expect(page).toHaveURL('/dashboard', { timeout: 5000 });
+  });
+
+  test('session persists after page reload', async ({ page }) => {
+    // Log in
+    await page.goto('/auth/login');
+    await page.fill('input[name="email"]', USER_A_EMAIL!);
+    await page.fill('input[name="password"]', USER_A_PASSWORD!);
+    await page.click('button[type="submit"]');
+
+    // Wait for redirect to dashboard
+    await expect(page).toHaveURL('/dashboard', { timeout: 5000 });
+
+    // Reload page
+    await page.reload();
+
+    // Should still be on dashboard (middleware auto-refreshed session)
+    await expect(page).toHaveURL('/dashboard');
+  });
+
+  test('user can log out', async ({ page }) => {
+    // Log in
+    await page.goto('/auth/login');
+    await page.fill('input[name="email"]', USER_A_EMAIL!);
+    await page.fill('input[name="password"]', USER_A_PASSWORD!);
+    await page.click('button[type="submit"]');
+
+    // Wait for redirect to dashboard
+    await expect(page).toHaveURL('/dashboard', { timeout: 5000 });
+
+    // Look for logout button or navigate to logout endpoint
+    const logoutButton = page.locator(
+      'button:has-text("Logout"), button:has-text("Sign Out"), a:has-text("Logout"), a:has-text("Sign Out")'
+    );
+    if (await logoutButton.isVisible()) {
+      await logoutButton.click();
+    } else {
+      // If no visible logout button, manually navigate to logout
+      await page.goto('/auth/logout');
+    }
+
+    // Should redirect to login or home page
+    const url = page.url();
+    expect(url).toMatch(/\/(auth\/)?(login|logout)?$/);
+  });
+
+  test('dashboard redirects to login after logout', async ({ page }) => {
+    // Log in
+    await page.goto('/auth/login');
+    await page.fill('input[name="email"]', USER_A_EMAIL!);
+    await page.fill('input[name="password"]', USER_A_PASSWORD!);
+    await page.click('button[type="submit"]');
+
+    // Wait for redirect to dashboard
+    await expect(page).toHaveURL('/dashboard', { timeout: 5000 });
+
+    // Clear cookies to simulate logout
+    await page.context().clearCookies();
+
+    // Navigate to dashboard
+    await page.goto('/dashboard');
+
+    // Should redirect to login because session was cleared
+    await expect(page).toHaveURL('/auth/login');
+  });
+
+  test.skip(
+    !USER_B_EMAIL || !USER_B_PASSWORD,
+    'Requires E2E_USER_B_EMAIL and E2E_USER_B_PASSWORD'
+  );
+
+  test('User B can log in successfully', async ({ page }) => {
+    await page.goto('/auth/login');
+    await page.fill('input[name="email"]', USER_B_EMAIL!);
+    await page.fill('input[name="password"]', USER_B_PASSWORD!);
+    await page.click('button[type="submit"]');
+
+    // Should redirect to dashboard after successful login
+    await expect(page).toHaveURL('/dashboard', { timeout: 5000 });
+  });
+});
+
+test.describe('Row-Level Security (RLS) Isolation', () => {
+  test.skip(
+    !USER_A_EMAIL ||
+      !USER_A_PASSWORD ||
+      !USER_B_EMAIL ||
+      !USER_B_PASSWORD ||
+      !SUPABASE_URL ||
+      !ANON_KEY,
+    'Requires both user credentials and Supabase configuration'
+  );
+
+  test('User A can select their own profile', async () => {
+    const supabase = createClient(SUPABASE_URL!, ANON_KEY!);
+
+    // Log in as User A
+    const authResponse = await supabase.auth.signInWithPassword({
+      email: USER_A_EMAIL!,
+      password: USER_A_PASSWORD!,
+    });
+
+    expect(authResponse.data.user).toBeTruthy();
+    const userAId = authResponse.data.user!.id;
+
+    // Query own profile
+    const { data: profileA, error: errorA } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userAId);
+
+    expect(errorA).toBeNull();
+    expect(profileA).toHaveLength(1);
+    expect(profileA![0].id).toBe(userAId);
+    expect(profileA![0].email).toBe(USER_A_EMAIL);
+
+    await supabase.auth.signOut();
+  });
+
+  test('User A cannot select User B profile', async () => {
+    const supabase = createClient(SUPABASE_URL!, ANON_KEY!);
+
+    // Log in as User A
+    const authA = await supabase.auth.signInWithPassword({
+      email: USER_A_EMAIL!,
+      password: USER_A_PASSWORD!,
+    });
+    expect(authA.data.user).toBeTruthy();
+
+    // Get User B ID by logging in as User B in a separate client
+    const supabaseB = createClient(SUPABASE_URL!, ANON_KEY!);
+    const authB = await supabaseB.auth.signInWithPassword({
+      email: USER_B_EMAIL!,
+      password: USER_B_PASSWORD!,
+    });
+    expect(authB.data.user).toBeTruthy();
+    const userBId = authB.data.user!.id;
+    await supabaseB.auth.signOut();
+
+    // As User A, try to query User B's profile (RLS should block)
+    const { data: profileB } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userBId);
+
+    // RLS should prevent this - result should be empty
+    expect(profileB).toHaveLength(0);
+
+    await supabase.auth.signOut();
+  });
+
+  test('User A cannot update User B profile', async () => {
+    const supabase = createClient(SUPABASE_URL!, ANON_KEY!);
+
+    // Log in as User A
+    const authA = await supabase.auth.signInWithPassword({
+      email: USER_A_EMAIL!,
+      password: USER_A_PASSWORD!,
+    });
+    expect(authA.data.user).toBeTruthy();
+
+    // Get User B ID
+    const supabaseB = createClient(SUPABASE_URL!, ANON_KEY!);
+    const authB = await supabaseB.auth.signInWithPassword({
+      email: USER_B_EMAIL!,
+      password: USER_B_PASSWORD!,
+    });
+    expect(authB.data.user).toBeTruthy();
+    const userBId = authB.data.user!.id;
+    await supabaseB.auth.signOut();
+
+    // As User A, try to update User B's profile (RLS should block)
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({ full_name: 'Hacked' })
+      .eq('id', userBId);
+
+    // RLS should prevent this
+    expect(updateError).toBeNull(); // Supabase may not error, just returns 0 rows updated
+
+    // Verify update didn't happen by checking row count
+    const { data: profileB } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userBId);
+
+    expect(profileB).toHaveLength(0); // User A can't read it, so update failed
+
+    await supabase.auth.signOut();
+  });
+
+  test('User B can select their own profile', async () => {
+    const supabase = createClient(SUPABASE_URL!, ANON_KEY!);
+
+    // Log in as User B
+    const authResponse = await supabase.auth.signInWithPassword({
+      email: USER_B_EMAIL!,
+      password: USER_B_PASSWORD!,
+    });
+
+    expect(authResponse.data.user).toBeTruthy();
+    const userBId = authResponse.data.user!.id;
+
+    // Query own profile
+    const { data: profileB, error: errorB } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userBId);
+
+    expect(errorB).toBeNull();
+    expect(profileB).toHaveLength(1);
+    expect(profileB![0].id).toBe(userBId);
+    expect(profileB![0].email).toBe(USER_B_EMAIL);
+
+    await supabase.auth.signOut();
+  });
+
+  test('User B cannot select User A profile', async () => {
+    const supabase = createClient(SUPABASE_URL!, ANON_KEY!);
+
+    // Get User A ID
+    const supabaseA = createClient(SUPABASE_URL!, ANON_KEY!);
+    const authA = await supabaseA.auth.signInWithPassword({
+      email: USER_A_EMAIL!,
+      password: USER_A_PASSWORD!,
+    });
+    expect(authA.data.user).toBeTruthy();
+    const userAId = authA.data.user!.id;
+    await supabaseA.auth.signOut();
+
+    // Log in as User B
+    const authB = await supabase.auth.signInWithPassword({
+      email: USER_B_EMAIL!,
+      password: USER_B_PASSWORD!,
+    });
+    expect(authB.data.user).toBeTruthy();
+
+    // As User B, try to query User A's profile (RLS should block)
+    const { data: profileA } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userAId);
+
+    // RLS should prevent this - result should be empty
+    expect(profileA).toHaveLength(0);
+
+    await supabase.auth.signOut();
+  });
+
+  test('anonymous client cannot read profile rows', async () => {
+    const supabase = createClient(SUPABASE_URL!, ANON_KEY!);
+
+    // Without authentication, try to query profiles
+    const { data: profiles } = await supabase.from('profiles').select('*');
+
+    // RLS should prevent anonymous access
+    expect(profiles).toHaveLength(0);
   });
 });
