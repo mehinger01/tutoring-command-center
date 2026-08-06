@@ -6,12 +6,15 @@ const TEST_PASSWORD = 'TestPassword123!';
 // Verify we're connected to the intended Supabase project
 test.beforeAll(async () => {
   // Test that the publishable key is valid and project is reachable
-  const response = await fetch('https://duurlnzmxgirdszarjlh.supabase.co/rest/v1/', {
-    headers: {
-      apikey: 'sb_publishable_5lzFSbsI924eCpn9lnh0Xw_mZpCxOuX',
-      'Content-Type': 'application/json',
-    },
-  });
+  const response = await fetch(
+    'https://duurlnzmxgirdszarjlh.supabase.co/rest/v1/',
+    {
+      headers: {
+        apikey: 'sb_publishable_5lzFSbsI924eCpn9lnh0Xw_mZpCxOuX',
+        'Content-Type': 'application/json',
+      },
+    }
+  );
 
   // Should NOT get "Invalid API key" - status 200 or 401 (auth required) is OK
   const text = await response.text();
@@ -116,11 +119,12 @@ test.describe('Authentication Flow', () => {
       'Unable to login',
     ];
 
-    const isValidError = validErrors.some(msg => errorText?.includes(msg));
+    const isValidError = validErrors.some((msg) => errorText?.includes(msg));
 
     // Reject configuration errors that indicate wrong Supabase setup:
-    expect(errorText).not.toContain('Invalid API key', 'Configuration error: wrong Supabase credentials');
-    expect(errorText).not.toContain('Missing Supabase URL', 'Configuration error: missing URL');
+    // These would indicate the Supabase project is not properly configured
+    expect(errorText).not.toContain('Invalid API key');
+    expect(errorText).not.toContain('Missing Supabase URL');
     expect(errorText).not.toContain('service_role key');
 
     // At least one legitimate auth error should be present
