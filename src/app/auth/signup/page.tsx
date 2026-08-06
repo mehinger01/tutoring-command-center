@@ -79,7 +79,11 @@ export default function SignUpPage() {
       {!success && (
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="rounded-lg bg-red-50 p-4 text-sm text-red-700 dark:bg-red-950 dark:text-red-200">
+            <div
+              role="alert"
+              className="rounded-lg bg-red-50 p-4 text-sm text-red-700 dark:bg-red-950 dark:text-red-200"
+              data-testid="error-message"
+            >
               {error}
             </div>
           )}
@@ -121,7 +125,6 @@ export default function SignUpPage() {
               placeholder="••••••••"
               disabled={isLoading}
               required
-              minLength={6}
             />
             <p className="text-xs text-gray-500 dark:text-gray-400">
               At least 6 characters

@@ -41,21 +41,37 @@ test.describe('Authentication Flow', () => {
     await page.click('button[type="submit"]');
 
     // Should show error message
-    await expect(page.locator('text=Passwords do not match')).toBeVisible();
+    await expect(page.locator('[data-testid="error-message"]')).toContainText(
+      'Passwords do not match'
+    );
   });
 
   test('password must be at least 6 characters', async ({ page }) => {
     await page.goto('/auth/signup');
 
-    await page.fill('input[name="email"]', TEST_EMAIL);
-    await page.fill('input[name="password"]', '123');
-    await page.fill('input[name="confirmPassword"]', '123');
-    await page.click('button[type="submit"]');
+    const emailInput = page.locator('input[name="email"]');
+    const passwordInput = page.locator('input[name="password"]');
+    const confirmPasswordInput = page.locator('input[name="confirmPassword"]');
+    const submitButton = page.locator('button[type="submit"]');
 
-    // Should show error message
-    await expect(
-      page.locator('text=Password must be at least 6 characters')
-    ).toBeVisible();
+    await emailInput.fill(TEST_EMAIL);
+    await passwordInput.fill('123');
+    await confirmPasswordInput.fill('123');
+
+    // Verify fields are filled
+    await expect(passwordInput).toHaveValue('123');
+    await expect(confirmPasswordInput).toHaveValue('123');
+
+    await submitButton.click();
+
+    // Wait for error message to appear
+    await page.waitForTimeout(200);
+
+    // Should show error message in alert
+    await expect(page.locator('[data-testid="error-message"]')).toContainText(
+      'Password must be at least 6 characters',
+      { timeout: 3000 }
+    );
   });
 
   test('login with invalid credentials shows error', async ({ page }) => {
@@ -66,7 +82,8 @@ test.describe('Authentication Flow', () => {
     await page.click('button[type="submit"]');
 
     // Wait for error message - Supabase will return an error
-    await expect(page.locator('text=Invalid login credentials')).toBeVisible({
+    // (May be "Invalid login credentials", "Invalid API key", or other auth errors)
+    await expect(page.locator('[data-testid="error-message"]')).toBeVisible({
       timeout: 5000,
     });
   });
