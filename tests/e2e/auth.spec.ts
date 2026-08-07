@@ -221,17 +221,19 @@ test.describe('Authenticated Sessions', () => {
     // Wait for redirect to dashboard
     await expect(page).toHaveURL('/dashboard', { timeout: 5000 });
 
-    // Clear cookies to simulate logout (middleware will redirect)
-    await page.context().clearCookies();
+    // Click the Sign out button
+    await page.click('button:has-text("Sign out")');
 
-    // Navigate to dashboard to trigger redirect
+    // Should redirect to login
+    await expect(page).toHaveURL('/auth/login', { timeout: 5000 });
+
+    // Verify session is cleared by navigating to dashboard
+    // It should redirect to login again
     await page.goto('/dashboard');
-
-    // Should redirect to login because session was cleared
     await expect(page).toHaveURL('/auth/login');
   });
 
-  test('dashboard redirects to login after logout', async ({ page }) => {
+  test('protected route redirects after session cleared', async ({ page }) => {
     // Log in
     await page.goto('/auth/login');
     await page.fill('input[name="email"]', USER_A_EMAIL!);
@@ -241,10 +243,10 @@ test.describe('Authenticated Sessions', () => {
     // Wait for redirect to dashboard
     await expect(page).toHaveURL('/dashboard', { timeout: 5000 });
 
-    // Clear cookies to simulate logout
+    // Clear session cookies directly (middleware should redirect on next access)
     await page.context().clearCookies();
 
-    // Navigate to dashboard
+    // Navigate to dashboard to trigger redirect
     await page.goto('/dashboard');
 
     // Should redirect to login because session was cleared
@@ -346,7 +348,7 @@ test.describe('Row-Level Security (RLS) Isolation', () => {
     });
     expect(authA.data.user).toBeTruthy();
 
-    // Get User B ID
+    // Get User B ID and original full_name
     const supabaseB = createClient(SUPABASE_URL!, ANON_KEY!);
     const authB = await supabaseB.auth.signInWithPassword({
       email: USER_B_EMAIL!,
@@ -354,26 +356,43 @@ test.describe('Row-Level Security (RLS) Isolation', () => {
     });
     expect(authB.data.user).toBeTruthy();
     const userBId = authB.data.user!.id;
+
+    const { data: originalProfile } = await supabaseB
+      .from('profiles')
+      .select('full_name')
+      .eq('id', userBId);
+    const originalFullName = originalProfile?.[0]?.full_name;
+
     await supabaseB.auth.signOut();
 
-    // As User A, try to update User B's profile (RLS should block)
-    const { error: updateError } = await supabase
+    // As User A, try to update User B's profile with unique marker (RLS should block)
+    const marker = 'RLS_SHOULD_BLOCK_A_TO_B';
+    await supabase
       .from('profiles')
-      .update({ full_name: 'Hacked' })
+      .update({ full_name: marker })
       .eq('id', userBId);
 
-    // RLS should prevent this
-    expect(updateError).toBeNull(); // Supabase may not error, just returns 0 rows updated
-
-    // Verify update didn't happen by checking row count
-    const { data: profileB } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userBId);
-
-    expect(profileB).toHaveLength(0); // User A can't read it, so update failed
-
+    // Sign User A out and log in as User B to verify the update failed
     await supabase.auth.signOut();
+
+    const supabaseB2 = createClient(SUPABASE_URL!, ANON_KEY!);
+    await supabaseB2.auth.signInWithPassword({
+      email: USER_B_EMAIL!,
+      password: USER_B_PASSWORD!,
+    });
+
+    // Read User B's own profile
+    const { data: userBProfile } = await supabaseB2
+      .from('profiles')
+      .select('full_name')
+      .eq('id', userBId);
+
+    // Verify the marker was NOT set (update was blocked by RLS)
+    expect(userBProfile).toHaveLength(1);
+    expect(userBProfile![0].full_name).not.toBe(marker);
+    expect(userBProfile![0].full_name).toBe(originalFullName);
+
+    await supabaseB2.auth.signOut();
   });
 
   test('User B can select their own profile', async () => {
@@ -432,6 +451,63 @@ test.describe('Row-Level Security (RLS) Isolation', () => {
     expect(profileA).toHaveLength(0);
 
     await supabase.auth.signOut();
+  });
+
+  test('User B cannot update User A profile', async () => {
+    const supabase = createClient(SUPABASE_URL!, ANON_KEY!);
+
+    // Log in as User B
+    const authB = await supabase.auth.signInWithPassword({
+      email: USER_B_EMAIL!,
+      password: USER_B_PASSWORD!,
+    });
+    expect(authB.data.user).toBeTruthy();
+
+    // Get User A ID and original full_name
+    const supabaseA = createClient(SUPABASE_URL!, ANON_KEY!);
+    const authA = await supabaseA.auth.signInWithPassword({
+      email: USER_A_EMAIL!,
+      password: USER_A_PASSWORD!,
+    });
+    expect(authA.data.user).toBeTruthy();
+    const userAId = authA.data.user!.id;
+
+    const { data: originalProfile } = await supabaseA
+      .from('profiles')
+      .select('full_name')
+      .eq('id', userAId);
+    const originalFullName = originalProfile?.[0]?.full_name;
+
+    await supabaseA.auth.signOut();
+
+    // As User B, try to update User A's profile with unique marker (RLS should block)
+    const marker = 'RLS_SHOULD_BLOCK_B_TO_A';
+    await supabase
+      .from('profiles')
+      .update({ full_name: marker })
+      .eq('id', userAId);
+
+    // Sign User B out and log in as User A to verify the update failed
+    await supabase.auth.signOut();
+
+    const supabaseA2 = createClient(SUPABASE_URL!, ANON_KEY!);
+    await supabaseA2.auth.signInWithPassword({
+      email: USER_A_EMAIL!,
+      password: USER_A_PASSWORD!,
+    });
+
+    // Read User A's own profile
+    const { data: userAProfile } = await supabaseA2
+      .from('profiles')
+      .select('full_name')
+      .eq('id', userAId);
+
+    // Verify the marker was NOT set (update was blocked by RLS)
+    expect(userAProfile).toHaveLength(1);
+    expect(userAProfile![0].full_name).not.toBe(marker);
+    expect(userAProfile![0].full_name).toBe(originalFullName);
+
+    await supabaseA2.auth.signOut();
   });
 
   test('anonymous client cannot read profile rows', async () => {
