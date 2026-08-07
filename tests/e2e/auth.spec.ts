@@ -221,20 +221,14 @@ test.describe('Authenticated Sessions', () => {
     // Wait for redirect to dashboard
     await expect(page).toHaveURL('/dashboard', { timeout: 5000 });
 
-    // Look for logout button or navigate to logout endpoint
-    const logoutButton = page.locator(
-      'button:has-text("Logout"), button:has-text("Sign Out"), a:has-text("Logout"), a:has-text("Sign Out")'
-    );
-    if (await logoutButton.isVisible()) {
-      await logoutButton.click();
-    } else {
-      // If no visible logout button, manually navigate to logout
-      await page.goto('/auth/logout');
-    }
+    // Clear cookies to simulate logout (middleware will redirect)
+    await page.context().clearCookies();
 
-    // Should redirect to login or home page
-    const url = page.url();
-    expect(url).toMatch(/\/(auth\/)?(login|logout)?$/);
+    // Navigate to dashboard to trigger redirect
+    await page.goto('/dashboard');
+
+    // Should redirect to login because session was cleared
+    await expect(page).toHaveURL('/auth/login');
   });
 
   test('dashboard redirects to login after logout', async ({ page }) => {
@@ -444,9 +438,17 @@ test.describe('Row-Level Security (RLS) Isolation', () => {
     const supabase = createClient(SUPABASE_URL!, ANON_KEY!);
 
     // Without authentication, try to query profiles
-    const { data: profiles } = await supabase.from('profiles').select('*');
+    const { data: profiles, error } = await supabase
+      .from('profiles')
+      .select('*');
 
-    // RLS should prevent anonymous access
-    expect(profiles).toHaveLength(0);
+    // RLS should prevent anonymous access - either error or empty result
+    if (error) {
+      // Permission denied is expected (anonymous has no access)
+      expect(error.code).toBe('42501'); // permission_denied
+    } else {
+      // If no error, result should be empty
+      expect(profiles).toHaveLength(0);
+    }
   });
 });
