@@ -74,7 +74,8 @@ test.describe('Phase 1A: Student Lifecycle', () => {
 
       // Should redirect to students list
       await expect(page).toHaveURL('/dashboard/students');
-      await expect(page.locator('text=Test Student')).toBeVisible();
+      // Use more specific locator to avoid strict mode issues with multiple matches
+      await expect(page.locator('h3:has-text("Test Student"):has-text("active")').first()).toBeVisible();
     });
 
     test('user can view student detail page', async ({ page }) => {
@@ -98,9 +99,14 @@ test.describe('Phase 1A: Student Lifecycle', () => {
       if (studentLinks.length === 0) throw new Error('Student not found');
       await studentLinks[0].click();
 
+      // Wait for page to fully load
+      await page.waitForLoadState('networkidle');
+
       await expect(page.locator('h1')).toContainText('Detail Test Student');
       await expect(page.locator('text=Overview')).toBeVisible();
-      await expect(page.locator('button:has-text("Edit")')).toBeVisible();
+      // Look for Edit link in the header
+      await expect(page.locator('a:has-text("Edit")')).toBeVisible();
+      // Archive button should be in the header
       await expect(page.locator('button:has-text("Archive")')).toBeVisible();
     });
 
@@ -125,9 +131,12 @@ test.describe('Phase 1A: Student Lifecycle', () => {
       if (studentLinks.length === 0) throw new Error('Student not found');
       await studentLinks[0].click();
 
-      // Click edit button
+      // Wait for detail page to load
+      await page.waitForLoadState('networkidle');
+
+      // Click edit link in header
       await page.click('a:has-text("Edit")');
-      await expect(page).toHaveURL(/\/edit$/);
+      await expect(page).toHaveURL(/\/edit$/, { timeout: 5000 });
 
       await page.fill('input[name="preferred_name"]', 'Eddie');
       await page.click('button:has-text("Save Changes")');
@@ -166,12 +175,15 @@ test.describe('Phase 1A: Student Lifecycle', () => {
       // Navigate to student (browser session already exists)
       await page.goto(`/dashboard/students/${student.id}`);
 
+      // Wait for page to fully load
+      await page.waitForLoadState('networkidle');
+
       // Archive the student
       await page.click('button:has-text("Archive")');
       await page.click('button:has-text("Archive")'); // Confirm dialog
 
-      // Should show Unarchive button now
-      await expect(page.locator('button:has-text("Unarchive")')).toBeVisible();
+      // Should show Unarchive button now (wait for it to appear)
+      await expect(page.locator('button:has-text("Unarchive")')).toBeVisible({ timeout: 5000 });
 
       // Unarchive
       await page.click('button:has-text("Unarchive")');
