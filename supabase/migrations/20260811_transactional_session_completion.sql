@@ -27,7 +27,7 @@ BEGIN
   END IF;
 
   -- Verify ownership (mirrors server-side check as defense in depth)
-  IF v_session_record.owner_id != public.auth.uid() THEN
+  IF v_session_record.owner_id != auth.uid() THEN
     RAISE EXCEPTION 'Forbidden';
   END IF;
 
@@ -59,4 +59,5 @@ END;
 $$;
 
 REVOKE EXECUTE ON FUNCTION public.complete_session_atomic(uuid) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.complete_session_atomic(uuid) FROM anon;
 GRANT EXECUTE ON FUNCTION public.complete_session_atomic(uuid) TO authenticated;
