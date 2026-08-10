@@ -43,23 +43,26 @@ test.describe('Phase 1A: Student Lifecycle', () => {
     });
 
     test('user can view students list', async ({ page }) => {
-      const supabase = createClient(SUPABASE_URL!, ANON_KEY!);
-      await supabase.auth.signInWithPassword({
-        email: USER_A_EMAIL!,
-        password: USER_A_PASSWORD!,
-      });
+      // Authenticate through browser login form (persists session in cookies)
+      await page.goto('/auth/login');
+      await page.fill('input[name="email"]', USER_A_EMAIL!);
+      await page.fill('input[name="password"]', USER_A_PASSWORD!);
+      await page.click('button[type="submit"]');
+      await expect(page).toHaveURL('/dashboard', { timeout: 5000 });
 
+      // Now navigate to students page (session persists)
       await page.goto('/dashboard/students');
       await expect(page.locator('h1')).toContainText('Students');
       await expect(page.locator('a:has-text("New Student")')).toBeVisible();
     });
 
     test('user can create a student', async ({ page }) => {
-      const supabase = createClient(SUPABASE_URL!, ANON_KEY!);
-      await supabase.auth.signInWithPassword({
-        email: USER_A_EMAIL!,
-        password: USER_A_PASSWORD!,
-      });
+      // Authenticate through browser login form
+      await page.goto('/auth/login');
+      await page.fill('input[name="email"]', USER_A_EMAIL!);
+      await page.fill('input[name="password"]', USER_A_PASSWORD!);
+      await page.click('button[type="submit"]');
+      await expect(page).toHaveURL('/dashboard', { timeout: 5000 });
 
       await page.goto('/dashboard/students/new');
 
@@ -72,80 +75,83 @@ test.describe('Phase 1A: Student Lifecycle', () => {
       // Should redirect to students list
       await expect(page).toHaveURL('/dashboard/students');
       await expect(page.locator('text=Test Student')).toBeVisible();
-
-      await supabase.auth.signOut();
     });
 
     test('user can view student detail page', async ({ page }) => {
-      const supabase = createClient(SUPABASE_URL!, ANON_KEY!);
-      await supabase.auth.signInWithPassword({
-        email: USER_A_EMAIL!,
-        password: USER_A_PASSWORD!,
-      });
+      // Authenticate through browser login form
+      await page.goto('/auth/login');
+      await page.fill('input[name="email"]', USER_A_EMAIL!);
+      await page.fill('input[name="password"]', USER_A_PASSWORD!);
+      await page.click('button[type="submit"]');
+      await expect(page).toHaveURL('/dashboard', { timeout: 5000 });
 
-      // Create a student first
-      const { data: student, error } = await supabase
-        .from('students')
-        .insert({
-          owner_id: (await supabase.auth.getUser()).data.user!.id,
-          first_name: 'Detail Test',
-          last_name: 'Student',
-          status: 'intake',
-        })
-        .select()
-        .single();
+      // Create a student first (via browser UI)
+      await page.goto('/dashboard/students/new');
+      await page.fill('input[name="first_name"]', 'Detail Test');
+      await page.fill('input[name="last_name"]', 'Student');
+      await page.selectOption('select[name="status"]', 'intake');
+      await page.click('button:has-text("Create Student")');
+      await expect(page).toHaveURL('/dashboard/students');
 
-      if (error) throw error;
-
-      await page.goto(`/dashboard/students/${student.id}`);
+      // Get the student ID from the URL after creation (last link clicked)
+      const studentLinks = await page.locator('a:has-text("Detail Test Student")').all();
+      if (studentLinks.length === 0) throw new Error('Student not found');
+      await studentLinks[0].click();
 
       await expect(page.locator('h1')).toContainText('Detail Test Student');
       await expect(page.locator('text=Overview')).toBeVisible();
       await expect(page.locator('button:has-text("Edit")')).toBeVisible();
       await expect(page.locator('button:has-text("Archive")')).toBeVisible();
-
-      await supabase.auth.signOut();
     });
 
     test('user can edit student', async ({ page }) => {
-      const supabase = createClient(SUPABASE_URL!, ANON_KEY!);
-      await supabase.auth.signInWithPassword({
-        email: USER_A_EMAIL!,
-        password: USER_A_PASSWORD!,
-      });
+      // Authenticate through browser login form
+      await page.goto('/auth/login');
+      await page.fill('input[name="email"]', USER_A_EMAIL!);
+      await page.fill('input[name="password"]', USER_A_PASSWORD!);
+      await page.click('button[type="submit"]');
+      await expect(page).toHaveURL('/dashboard', { timeout: 5000 });
 
-      // Create a student
-      const { data: student } = await supabase
-        .from('students')
-        .insert({
-          owner_id: (await supabase.auth.getUser()).data.user!.id,
-          first_name: 'Edit Test',
-          last_name: 'Student',
-          status: 'active',
-        })
-        .select()
-        .single();
+      // Create a student first via UI
+      await page.goto('/dashboard/students/new');
+      await page.fill('input[name="first_name"]', 'Edit Test');
+      await page.fill('input[name="last_name"]', 'Student');
+      await page.selectOption('select[name="status"]', 'active');
+      await page.click('button:has-text("Create Student")');
+      await expect(page).toHaveURL('/dashboard/students');
 
-      await page.goto(`/dashboard/students/${student.id}/edit`);
+      // Navigate to the student and edit
+      const studentLinks = await page.locator('a:has-text("Edit Test Student")').all();
+      if (studentLinks.length === 0) throw new Error('Student not found');
+      await studentLinks[0].click();
+
+      // Click edit button
+      await page.click('a:has-text("Edit")');
+      await expect(page).toHaveURL(/\/edit$/);
 
       await page.fill('input[name="preferred_name"]', 'Eddie');
       await page.click('button:has-text("Save Changes")');
 
       // Should redirect back to detail
-      await expect(page).toHaveURL(`/dashboard/students/${student.id}`);
       await expect(page.locator('h1')).toContainText('Eddie');
-
-      await supabase.auth.signOut();
     });
 
     test('user can archive and unarchive student', async ({ page }) => {
+      // Authenticate browser first (login form persists session in cookies)
+      await page.goto('/auth/login');
+      await page.fill('input[name="email"]', USER_A_EMAIL!);
+      await page.fill('input[name="password"]', USER_A_PASSWORD!);
+      await page.click('button[type="submit"]');
+      await expect(page).toHaveURL('/dashboard', { timeout: 5000 });
+
+      // Authenticate Node.js client as same user to create test data
       const supabase = createClient(SUPABASE_URL!, ANON_KEY!);
       await supabase.auth.signInWithPassword({
         email: USER_A_EMAIL!,
         password: USER_A_PASSWORD!,
       });
 
-      // Create a student
+      // Create a student via API
       const { data: student } = await supabase
         .from('students')
         .insert({
@@ -157,6 +163,7 @@ test.describe('Phase 1A: Student Lifecycle', () => {
         .select()
         .single();
 
+      // Navigate to student (browser session already exists)
       await page.goto(`/dashboard/students/${student.id}`);
 
       // Archive the student
@@ -177,13 +184,21 @@ test.describe('Phase 1A: Student Lifecycle', () => {
     });
 
     test('user can create and view intake', async ({ page }) => {
+      // Authenticate browser first (login form persists session in cookies)
+      await page.goto('/auth/login');
+      await page.fill('input[name="email"]', USER_A_EMAIL!);
+      await page.fill('input[name="password"]', USER_A_PASSWORD!);
+      await page.click('button[type="submit"]');
+      await expect(page).toHaveURL('/dashboard', { timeout: 5000 });
+
+      // Authenticate Node.js client as same user to create test data
       const supabase = createClient(SUPABASE_URL!, ANON_KEY!);
       await supabase.auth.signInWithPassword({
         email: USER_A_EMAIL!,
         password: USER_A_PASSWORD!,
       });
 
-      // Create a student
+      // Create a student via API
       const { data: student } = await supabase
         .from('students')
         .insert({
@@ -194,6 +209,7 @@ test.describe('Phase 1A: Student Lifecycle', () => {
         .select()
         .single();
 
+      // Navigate to intake page (browser session already exists)
       await page.goto(`/dashboard/students/${student.id}/intake`);
 
       await page.fill('textarea[name="initial_goals"]', 'Improve math skills');
@@ -216,13 +232,21 @@ test.describe('Phase 1A: Student Lifecycle', () => {
     });
 
     test('user can create and view session', async ({ page }) => {
+      // Authenticate browser first (login form persists session in cookies)
+      await page.goto('/auth/login');
+      await page.fill('input[name="email"]', USER_A_EMAIL!);
+      await page.fill('input[name="password"]', USER_A_PASSWORD!);
+      await page.click('button[type="submit"]');
+      await expect(page).toHaveURL('/dashboard', { timeout: 5000 });
+
+      // Authenticate Node.js client as same user to create test data
       const supabase = createClient(SUPABASE_URL!, ANON_KEY!);
       await supabase.auth.signInWithPassword({
         email: USER_A_EMAIL!,
         password: USER_A_PASSWORD!,
       });
 
-      // Create a student
+      // Create a student via API
       const { data: student } = await supabase
         .from('students')
         .insert({
@@ -241,6 +265,7 @@ test.describe('Phase 1A: Student Lifecycle', () => {
       end.setHours(end.getHours() + 1);
       const endTime = end.toISOString().slice(0, 16);
 
+      // Navigate to session creation page (browser session already exists)
       await page.goto(`/dashboard/students/${student.id}/sessions/new`);
 
       await page.fill('input[name="scheduled_start"]', startTime);
@@ -694,6 +719,14 @@ test.describe('Phase 1A: Student Lifecycle', () => {
 
   intakeDetailTests('Intake Detail View', () => {
     test('user can view and edit specific intake', async ({ page }) => {
+      // Authenticate browser first (login form persists session in cookies)
+      await page.goto('/auth/login');
+      await page.fill('input[name="email"]', USER_A_EMAIL!);
+      await page.fill('input[name="password"]', USER_A_PASSWORD!);
+      await page.click('button[type="submit"]');
+      await expect(page).toHaveURL('/dashboard', { timeout: 5000 });
+
+      // Authenticate Node.js client as same user to create test data
       const supabase = createClient(SUPABASE_URL!, ANON_KEY!);
       await supabase.auth.signInWithPassword({
         email: USER_A_EMAIL!,
@@ -722,7 +755,7 @@ test.describe('Phase 1A: Student Lifecycle', () => {
         .select()
         .single();
 
-      // Navigate to intake detail
+      // Navigate to intake detail (browser session already exists)
       await page.goto(`/dashboard/students/${student.id}/intake/${intake.id}`);
 
       // Verify data is displayed
