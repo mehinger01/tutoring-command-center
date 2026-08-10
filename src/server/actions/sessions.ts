@@ -192,11 +192,14 @@ export async function completeSession(sessionId: string) {
     throw new AppError('Forbidden', ErrorCode.FORBIDDEN, 403);
   }
 
+  const completedAt = new Date().toISOString();
+
+  // Update session status and completion time
   const { data, error } = await supabase
     .from('sessions')
     .update({
       status: 'completed',
-      completed_at: new Date().toISOString(),
+      completed_at: completedAt,
     })
     .eq('id', sessionId)
     .select()
@@ -205,6 +208,22 @@ export async function completeSession(sessionId: string) {
   if (error) {
     throw new AppError(
       `Failed to complete session: ${error.message}`,
+      ErrorCode.INTERNAL_SERVER_ERROR,
+      500
+    );
+  }
+
+  // Update student's last session date to maintain history
+  const { error: studentError } = await supabase
+    .from('students')
+    .update({
+      last_session_date: completedAt,
+    })
+    .eq('id', session.student_id);
+
+  if (studentError) {
+    throw new AppError(
+      `Failed to update student session date: ${studentError.message}`,
       ErrorCode.INTERNAL_SERVER_ERROR,
       500
     );

@@ -32,6 +32,11 @@ export default async function SessionDetailPage({
     return redirect(`/dashboard/students/${studentId}/sessions`);
   }
 
+  // Verify the session belongs to this student
+  if (session.student_id !== studentId) {
+    return redirect(`/dashboard/students/${studentId}/sessions`);
+  }
+
   return (
     <div className="space-y-6">
       <div>

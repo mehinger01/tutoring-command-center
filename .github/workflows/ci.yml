@@ -65,3 +65,44 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Install dependencies (clean)
+        run: npm ci
+
+      - name: Check for required E2E credentials
+        run: |
+          if [ -z "${{ secrets.E2E_USER_A_EMAIL }}" ] || [ -z "${{ secrets.E2E_USER_A_PASSWORD }}" ] || [ -z "${{ secrets.E2E_USER_B_EMAIL }}" ] || [ -z "${{ secrets.E2E_USER_B_PASSWORD }}" ]; then
+            echo "ERROR: Required E2E test credentials are missing from GitHub secrets."
+            echo "Please add the following secrets to the repository:"
+            echo "  - E2E_USER_A_EMAIL"
+            echo "  - E2E_USER_A_PASSWORD"
+            echo "  - E2E_USER_B_EMAIL"
+            echo "  - E2E_USER_B_PASSWORD"
+            exit 1
+          fi
+
+      - name: Build for production
+        run: npm run build
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          E2E_USER_A_EMAIL: ${{ secrets.E2E_USER_A_EMAIL }}
+          E2E_USER_A_PASSWORD: ${{ secrets.E2E_USER_A_PASSWORD }}
+          E2E_USER_B_EMAIL: ${{ secrets.E2E_USER_B_EMAIL }}
+          E2E_USER_B_PASSWORD: ${{ secrets.E2E_USER_B_PASSWORD }}

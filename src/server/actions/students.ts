@@ -82,6 +82,32 @@ export async function getStudents() {
   return data || [];
 }
 
+export async function getArchivedStudents() {
+  const supabase = await createClient();
+  const user = await getAuthUser();
+
+  if (!user) {
+    throw new AppError('Unauthorized', ErrorCode.UNAUTHORIZED, 401);
+  }
+
+  const { data, error } = await supabase
+    .from('students')
+    .select('*')
+    .eq('owner_id', user.id)
+    .eq('status', 'archived')
+    .order('archived_at', { ascending: false });
+
+  if (error) {
+    throw new AppError(
+      `Failed to fetch archived students: ${error.message}`,
+      ErrorCode.INTERNAL_SERVER_ERROR,
+      500
+    );
+  }
+
+  return data || [];
+}
+
 export async function getStudentById(studentId: string) {
   const supabase = await createClient();
   const user = await getAuthUser();

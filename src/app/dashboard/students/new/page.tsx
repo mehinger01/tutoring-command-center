@@ -23,6 +23,12 @@ export default function NewStudentPage() {
     student_email: '',
     current_priorities: '',
     scheduling_notes: '',
+    tutor_notes: '',
+    tutoring_type: '',
+    subjects: '',
+    student_site_url: '',
+    github_repo_url: '',
+    external_platform_notes: '',
     start_date: '',
   });
 
@@ -44,7 +50,7 @@ export default function NewStudentPage() {
     setIsSubmitting(true);
 
     try {
-      await createStudent({
+      const result = await createStudent({
         first_name: formData.first_name,
         last_name: formData.last_name || undefined,
         preferred_name: formData.preferred_name || undefined,
@@ -57,12 +63,22 @@ export default function NewStudentPage() {
         student_email: formData.student_email || undefined,
         current_priorities: formData.current_priorities || undefined,
         scheduling_notes: formData.scheduling_notes || undefined,
+        tutor_notes: formData.tutor_notes || undefined,
+        tutoring_type: formData.tutoring_type
+          ? formData.tutoring_type.split(',').map((s) => s.trim())
+          : undefined,
+        subjects: formData.subjects
+          ? formData.subjects.split(',').map((s) => s.trim())
+          : undefined,
+        student_site_url: formData.student_site_url || undefined,
+        github_repo_url: formData.github_repo_url || undefined,
+        external_platform_notes: formData.external_platform_notes || undefined,
         start_date: formData.start_date
           ? new Date(formData.start_date)
           : undefined,
       });
 
-      router.push('/dashboard/students');
+      router.push(`/dashboard/students/${result.id}`);
     } catch (err) {
       setError(getClientErrorMessage(err));
     } finally {
@@ -313,7 +329,89 @@ export default function NewStudentPage() {
 
         <div className="space-y-4 border-t border-gray-200 pt-6 dark:border-gray-800">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Priorities & Notes
+            Tutoring & Subjects
+          </h2>
+
+          <div>
+            <label
+              htmlFor="tutoring_type"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              Tutoring Types (comma-separated)
+            </label>
+            <input
+              id="tutoring_type"
+              name="tutoring_type"
+              type="text"
+              placeholder="e.g., Math, Science, Writing"
+              value={formData.tutoring_type}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="subjects"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              Subjects (comma-separated)
+            </label>
+            <input
+              id="subjects"
+              name="subjects"
+              type="text"
+              placeholder="e.g., Algebra, US History"
+              value={formData.subjects}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-4 border-t border-gray-200 pt-6 dark:border-gray-800">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Resources & Links
+          </h2>
+
+          <div>
+            <label
+              htmlFor="student_site_url"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              Student Website/Portfolio
+            </label>
+            <input
+              id="student_site_url"
+              name="student_site_url"
+              type="url"
+              value={formData.student_site_url}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="github_repo_url"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              GitHub Repository
+            </label>
+            <input
+              id="github_repo_url"
+              name="github_repo_url"
+              type="url"
+              value={formData.github_repo_url}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-4 border-t border-gray-200 pt-6 dark:border-gray-800">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Notes
           </h2>
 
           <div>
@@ -345,6 +443,40 @@ export default function NewStudentPage() {
               name="scheduling_notes"
               rows={3}
               value={formData.scheduling_notes}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="tutor_notes"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              Tutor Notes
+            </label>
+            <textarea
+              id="tutor_notes"
+              name="tutor_notes"
+              rows={3}
+              value={formData.tutor_notes}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="external_platform_notes"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              External Platform Notes
+            </label>
+            <textarea
+              id="external_platform_notes"
+              name="external_platform_notes"
+              rows={3}
+              value={formData.external_platform_notes}
               onChange={handleChange}
               className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
             />

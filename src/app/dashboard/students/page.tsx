@@ -1,23 +1,34 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getAuthUser } from '@/lib/auth/actions';
-import { getStudents } from '@/server/actions/students';
+import { getStudents, getArchivedStudents } from '@/server/actions/students';
 import { getClientErrorMessage } from '@/lib/errors/app-error';
 
-export default async function StudentsPage() {
+export default async function StudentsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ view?: string }>;
+}) {
   const user = await getAuthUser();
   if (!user) {
     redirect('/auth/login');
   }
 
+  const params = await searchParams;
+  const view = params.view || 'active';
+
   let students = [];
+  let archivedStudents = [];
   let error: string | null = null;
 
   try {
     students = await getStudents();
+    archivedStudents = await getArchivedStudents();
   } catch (err) {
     error = getClientErrorMessage(err);
   }
+
+  const displayStudents = view === 'archived' ? archivedStudents : students;
 
   return (
     <div className="space-y-6">
@@ -30,12 +41,14 @@ export default async function StudentsPage() {
             Manage your tutoring students
           </p>
         </div>
-        <Link
-          href="/dashboard/students/new"
-          className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700"
-        >
-          New Student
-        </Link>
+        {view !== 'archived' && (
+          <Link
+            href="/dashboard/students/new"
+            className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700"
+          >
+            New Student
+          </Link>
+        )}
       </div>
 
       {error && (
@@ -44,21 +57,48 @@ export default async function StudentsPage() {
         </div>
       )}
 
-      {students.length === 0 ? (
+      <div className="flex gap-2 border-b border-gray-200 dark:border-gray-800">
+        <Link
+          href="/dashboard/students?view=active"
+          className={`px-4 py-2 font-medium transition-colors ${
+            view !== 'archived'
+              ? 'border-b-2 border-blue-600 text-blue-600 dark:text-blue-400'
+              : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
+          }`}
+        >
+          Active ({students.length})
+        </Link>
+        <Link
+          href="/dashboard/students?view=archived"
+          className={`px-4 py-2 font-medium transition-colors ${
+            view === 'archived'
+              ? 'border-b-2 border-blue-600 text-blue-600 dark:text-blue-400'
+              : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
+          }`}
+        >
+          Archived ({archivedStudents.length})
+        </Link>
+      </div>
+
+      {displayStudents.length === 0 ? (
         <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center dark:border-gray-800 dark:bg-gray-900/50">
           <p className="text-gray-600 dark:text-gray-400">
-            No students yet. Create your first student to get started.
+            {view === 'archived'
+              ? 'No archived students. Active students can be archived from their detail page.'
+              : 'No students yet. Create your first student to get started.'}
           </p>
-          <Link
-            href="/dashboard/students/new"
-            className="mt-4 inline-block text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-          >
-            Create a student →
-          </Link>
+          {view !== 'archived' && (
+            <Link
+              href="/dashboard/students/new"
+              className="mt-4 inline-block text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+            >
+              Create a student →
+            </Link>
+          )}
         </div>
       ) : (
         <div className="grid gap-4">
-          {students.map((student) => (
+          {displayStudents.map((student) => (
             <Link
               key={student.id}
               href={`/dashboard/students/${student.id}`}
@@ -97,7 +137,9 @@ export default async function StudentsPage() {
                         ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200'
                         : student.status === 'intake'
                           ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200'
-                          : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200'
+                          : student.status === 'archived'
+                            ? 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-200'
+                            : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200'
                     }`}
                   >
                     {student.status}
