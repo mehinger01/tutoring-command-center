@@ -11,8 +11,9 @@ import { StatusBadge } from './status-badge';
 export default async function StudentDetailPage({
   params,
 }: {
-  params: { studentId: string };
+  params: Promise<{ studentId: string }>;
 }) {
+  const { studentId } = await params;
   const user = await getAuthUser();
   if (!user) {
     redirect('/auth/login');
@@ -24,9 +25,9 @@ export default async function StudentDetailPage({
   let error: string | null = null;
 
   try {
-    student = await getStudentById(params.studentId);
-    intakes = await getIntakes(params.studentId);
-    sessions = await getSessions(params.studentId);
+    student = await getStudentById(studentId);
+    intakes = await getIntakes(studentId);
+    sessions = await getSessions(studentId);
   } catch (err) {
     error = getClientErrorMessage(err);
   }
@@ -72,13 +73,13 @@ export default async function StudentDetailPage({
         </div>
         <div className="flex gap-2">
           <Link
-            href={`/dashboard/students/${params.studentId}/edit`}
+            href={`/dashboard/students/${studentId}/edit`}
             className="rounded-lg border border-gray-300 px-4 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
           >
             Edit
           </Link>
           <ArchiveButton
-            studentId={params.studentId}
+            studentId={studentId}
             isArchived={student.status === 'archived'}
           />
         </div>
@@ -247,7 +248,7 @@ export default async function StudentDetailPage({
               Latest Intake
             </h2>
             <Link
-              href={`/dashboard/students/${params.studentId}/intake`}
+              href={`/dashboard/students/${studentId}/intake`}
               className="text-sm text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
             >
               View all intakes →
@@ -289,7 +290,7 @@ export default async function StudentDetailPage({
             Upcoming Sessions ({upcomingSessions.length})
           </h2>
           <Link
-            href={`/dashboard/students/${params.studentId}/sessions/new`}
+            href={`/dashboard/students/${studentId}/sessions/new`}
             className="text-sm text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
           >
             Schedule session →
@@ -304,7 +305,7 @@ export default async function StudentDetailPage({
             {upcomingSessions.map((session) => (
               <Link
                 key={session.id}
-                href={`/dashboard/students/${params.studentId}/sessions/${session.id}`}
+                href={`/dashboard/students/${studentId}/sessions/${session.id}`}
                 className="block rounded border border-gray-200 p-3 transition-colors hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800"
               >
                 <div className="font-medium text-gray-900 dark:text-white">
@@ -335,7 +336,7 @@ export default async function StudentDetailPage({
             {completedSessions.slice(0, 5).map((session) => (
               <Link
                 key={session.id}
-                href={`/dashboard/students/${params.studentId}/sessions/${session.id}`}
+                href={`/dashboard/students/${studentId}/sessions/${session.id}`}
                 className="block rounded border border-gray-200 p-3 transition-colors hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800"
               >
                 <div className="font-medium text-gray-900 dark:text-white">

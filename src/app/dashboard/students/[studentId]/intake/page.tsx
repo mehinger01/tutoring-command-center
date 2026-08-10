@@ -9,8 +9,9 @@ import { IntakeForm } from './intake-form';
 export default async function IntakePage({
   params,
 }: {
-  params: { studentId: string };
+  params: Promise<{ studentId: string }>;
 }) {
+  const { studentId } = await params;
   const user = await getAuthUser();
   if (!user) {
     redirect('/auth/login');
@@ -21,8 +22,8 @@ export default async function IntakePage({
   let error: string | null = null;
 
   try {
-    student = await getStudentById(params.studentId);
-    intakes = await getIntakes(params.studentId);
+    student = await getStudentById(studentId);
+    intakes = await getIntakes(studentId);
   } catch (err) {
     error = getClientErrorMessage(err);
   }
@@ -35,7 +36,7 @@ export default async function IntakePage({
     <div className="max-w-4xl space-y-6">
       <div>
         <Link
-          href={`/dashboard/students/${params.studentId}`}
+          href={`/dashboard/students/${studentId}`}
           className="text-sm text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
         >
           ← Back to {student.preferred_name || student.first_name}
@@ -55,7 +56,7 @@ export default async function IntakePage({
         </div>
       )}
 
-      <IntakeForm studentId={params.studentId} />
+      <IntakeForm studentId={studentId} />
 
       {intakes.length > 0 && (
         <div className="space-y-4">
@@ -77,7 +78,7 @@ export default async function IntakePage({
                     })}
                   </h3>
                   <Link
-                    href={`/dashboard/students/${params.studentId}/intake/${intake.id}`}
+                    href={`/dashboard/students/${studentId}/intake/${intake.id}`}
                     className="text-sm text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
                   >
                     View/Edit →

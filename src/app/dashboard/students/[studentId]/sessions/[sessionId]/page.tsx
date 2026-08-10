@@ -9,8 +9,9 @@ import { SessionDetailContent } from './session-detail-content';
 export default async function SessionDetailPage({
   params,
 }: {
-  params: { studentId: string; sessionId: string };
+  params: Promise<{ studentId: string; sessionId: string }>;
 }) {
+  const { studentId, sessionId } = await params;
   const user = await getAuthUser();
   if (!user) {
     redirect('/auth/login');
@@ -21,21 +22,21 @@ export default async function SessionDetailPage({
   let error: string | null = null;
 
   try {
-    student = await getStudentById(params.studentId);
-    session = await getSessionById(params.sessionId);
+    student = await getStudentById(studentId);
+    session = await getSessionById(sessionId);
   } catch (err) {
     error = getClientErrorMessage(err);
   }
 
   if (!student || !session) {
-    return redirect(`/dashboard/students/${params.studentId}/sessions`);
+    return redirect(`/dashboard/students/${studentId}/sessions`);
   }
 
   return (
     <div className="space-y-6">
       <div>
         <Link
-          href={`/dashboard/students/${params.studentId}/sessions`}
+          href={`/dashboard/students/${studentId}/sessions`}
           className="text-sm text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
         >
           ← Back to Sessions

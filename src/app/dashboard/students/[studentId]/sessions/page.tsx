@@ -8,8 +8,9 @@ import { getClientErrorMessage } from '@/lib/errors/app-error';
 export default async function SessionsPage({
   params,
 }: {
-  params: { studentId: string };
+  params: Promise<{ studentId: string }>;
 }) {
+  const { studentId } = await params;
   const user = await getAuthUser();
   if (!user) {
     redirect('/auth/login');
@@ -20,8 +21,8 @@ export default async function SessionsPage({
   let error: string | null = null;
 
   try {
-    student = await getStudentById(params.studentId);
-    sessions = await getSessions(params.studentId);
+    student = await getStudentById(studentId);
+    sessions = await getSessions(studentId);
   } catch (err) {
     error = getClientErrorMessage(err);
   }
@@ -48,7 +49,7 @@ export default async function SessionsPage({
       <div className="flex items-center justify-between">
         <div>
           <Link
-            href={`/dashboard/students/${params.studentId}`}
+            href={`/dashboard/students/${studentId}`}
             className="text-sm text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
           >
             ← Back to {student.preferred_name || student.first_name}
@@ -58,7 +59,7 @@ export default async function SessionsPage({
           </h1>
         </div>
         <Link
-          href={`/dashboard/students/${params.studentId}/sessions/new`}
+          href={`/dashboard/students/${studentId}/sessions/new`}
           className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700"
         >
           Schedule Session
@@ -85,7 +86,7 @@ export default async function SessionsPage({
             {upcomingSessions.map((session) => (
               <Link
                 key={session.id}
-                href={`/dashboard/students/${params.studentId}/sessions/${session.id}`}
+                href={`/dashboard/students/${studentId}/sessions/${session.id}`}
                 className="flex items-center justify-between rounded border border-gray-200 p-3 transition-colors hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800"
               >
                 <div>
@@ -121,7 +122,7 @@ export default async function SessionsPage({
             {pastSessions.slice(0, 10).map((session) => (
               <Link
                 key={session.id}
-                href={`/dashboard/students/${params.studentId}/sessions/${session.id}`}
+                href={`/dashboard/students/${studentId}/sessions/${session.id}`}
                 className="flex items-center justify-between rounded border border-gray-200 p-3 transition-colors hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800"
               >
                 <div>
