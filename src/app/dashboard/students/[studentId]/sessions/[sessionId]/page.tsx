@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getAuthUser } from '@/lib/auth/actions';
 import { getStudentById } from '@/server/actions/students';
-import { getSessionById, completeSession } from '@/server/actions/sessions';
+import { getSessionById } from '@/server/actions/sessions';
 import { getClientErrorMessage } from '@/lib/errors/app-error';
 import { SessionDetailContent } from './session-detail-content';
 
@@ -42,7 +42,10 @@ export default async function SessionDetailPage({
         </Link>
         <h1 className="mt-4 text-3xl font-bold text-gray-900 dark:text-white">
           Session: {new Date(session.scheduled_start).toLocaleDateString()} at{' '}
-          {new Date(session.scheduled_start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          {new Date(session.scheduled_start).toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+          })}
         </h1>
       </div>
 
@@ -52,10 +55,7 @@ export default async function SessionDetailPage({
         </div>
       )}
 
-      <SessionDetailContent
-        studentId={params.studentId}
-        session={session}
-      />
+      <SessionDetailContent session={session} />
     </div>
   );
 }

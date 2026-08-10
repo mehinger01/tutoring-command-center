@@ -23,7 +23,9 @@ export default async function StudentsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Students</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            Students
+          </h1>
           <p className="mt-1 text-gray-600 dark:text-gray-400">
             Manage your tutoring students
           </p>
@@ -74,18 +76,19 @@ export default async function StudentsPage() {
                       {student.grade_level && ` • Grade ${student.grade_level}`}
                     </p>
                   )}
-                  {student.tutoring_type && student.tutoring_type.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {student.tutoring_type.map((type) => (
-                        <span
-                          key={type}
-                          className="inline-block rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-200"
-                        >
-                          {type}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                  {student.tutoring_type &&
+                    student.tutoring_type.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {student.tutoring_type.map((type: string) => (
+                          <span
+                            key={type}
+                            className="inline-block rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-200"
+                          >
+                            {type}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                 </div>
                 <div className="text-right">
                   <span
@@ -93,8 +96,8 @@ export default async function StudentsPage() {
                       student.status === 'active'
                         ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200'
                         : student.status === 'intake'
-                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200'
-                        : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200'
+                          ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200'
+                          : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200'
                     }`}
                   >
                     {student.status}

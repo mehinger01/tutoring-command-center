@@ -6,7 +6,11 @@ import Link from 'next/link';
 import { getStudentById, updateStudent } from '@/server/actions/students';
 import { getClientErrorMessage } from '@/lib/errors/app-error';
 
-export default function EditStudentPage({ params }: { params: { studentId: string } }) {
+export default function EditStudentPage({
+  params,
+}: {
+  params: { studentId: string };
+}) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -56,7 +60,9 @@ export default function EditStudentPage({ params }: { params: { studentId: strin
           student_site_url: student.student_site_url || '',
           github_repo_url: student.github_repo_url || '',
           external_platform_notes: student.external_platform_notes || '',
-          start_date: student.start_date ? new Date(student.start_date).toISOString().split('T')[0] : '',
+          start_date: student.start_date
+            ? new Date(student.start_date).toISOString().split('T')[0]
+            : '',
         });
       } catch (err) {
         setError(getClientErrorMessage(err));
@@ -68,7 +74,11 @@ export default function EditStudentPage({ params }: { params: { studentId: strin
     fetchStudent();
   }, [params.studentId]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -90,10 +100,16 @@ export default function EditStudentPage({ params }: { params: { studentId: strin
         grade_level: formData.grade_level || undefined,
         school_name: formData.school_name || undefined,
         tutoring_type: formData.tutoring_type
-          ? formData.tutoring_type.split(',').map((s) => s.trim()).filter(Boolean)
+          ? formData.tutoring_type
+              .split(',')
+              .map((s) => s.trim())
+              .filter(Boolean)
           : undefined,
         subjects: formData.subjects
-          ? formData.subjects.split(',').map((s) => s.trim()).filter(Boolean)
+          ? formData.subjects
+              .split(',')
+              .map((s) => s.trim())
+              .filter(Boolean)
           : undefined,
         parent_guardian_name: formData.parent_guardian_name || undefined,
         parent_guardian_email: formData.parent_guardian_email || undefined,
@@ -105,7 +121,9 @@ export default function EditStudentPage({ params }: { params: { studentId: strin
         student_site_url: formData.student_site_url || undefined,
         github_repo_url: formData.github_repo_url || undefined,
         external_platform_notes: formData.external_platform_notes || undefined,
-        start_date: formData.start_date ? new Date(formData.start_date) : undefined,
+        start_date: formData.start_date
+          ? new Date(formData.start_date)
+          : undefined,
       });
 
       router.push(`/dashboard/students/${params.studentId}`);
@@ -133,10 +151,15 @@ export default function EditStudentPage({ params }: { params: { studentId: strin
         >
           ← Back to Student
         </Link>
-        <h1 className="mt-4 text-3xl font-bold text-gray-900 dark:text-white">Edit Student</h1>
+        <h1 className="mt-4 text-3xl font-bold text-gray-900 dark:text-white">
+          Edit Student
+        </h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-6 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900"
+      >
         {error && (
           <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200">
             {error}
@@ -144,11 +167,16 @@ export default function EditStudentPage({ params }: { params: { studentId: strin
         )}
 
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Basic Information</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Basic Information
+          </h2>
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label htmlFor="first_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="first_name"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
                 First Name *
               </label>
               <input
@@ -163,7 +191,10 @@ export default function EditStudentPage({ params }: { params: { studentId: strin
             </div>
 
             <div>
-              <label htmlFor="last_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="last_name"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
                 Last Name
               </label>
               <input
@@ -178,7 +209,10 @@ export default function EditStudentPage({ params }: { params: { studentId: strin
           </div>
 
           <div>
-            <label htmlFor="preferred_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="preferred_name"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Preferred Name
             </label>
             <input
@@ -193,7 +227,10 @@ export default function EditStudentPage({ params }: { params: { studentId: strin
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="status"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
                 Status
               </label>
               <select
@@ -210,7 +247,10 @@ export default function EditStudentPage({ params }: { params: { studentId: strin
             </div>
 
             <div>
-              <label htmlFor="start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="start_date"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
                 Start Date
               </label>
               <input
@@ -226,11 +266,16 @@ export default function EditStudentPage({ params }: { params: { studentId: strin
         </div>
 
         <div className="space-y-4 border-t border-gray-200 pt-6 dark:border-gray-800">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Education</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Education
+          </h2>
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label htmlFor="school_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="school_name"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
                 School Name
               </label>
               <input
@@ -244,7 +289,10 @@ export default function EditStudentPage({ params }: { params: { studentId: strin
             </div>
 
             <div>
-              <label htmlFor="grade_level" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="grade_level"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
                 Grade Level
               </label>
               <input
@@ -260,7 +308,10 @@ export default function EditStudentPage({ params }: { params: { studentId: strin
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label htmlFor="tutoring_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="tutoring_type"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
                 Tutoring Types (comma-separated)
               </label>
               <input
@@ -274,7 +325,10 @@ export default function EditStudentPage({ params }: { params: { studentId: strin
             </div>
 
             <div>
-              <label htmlFor="subjects" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="subjects"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
                 Subjects (comma-separated)
               </label>
               <input
@@ -290,10 +344,15 @@ export default function EditStudentPage({ params }: { params: { studentId: strin
         </div>
 
         <div className="space-y-4 border-t border-gray-200 pt-6 dark:border-gray-800">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Parent/Guardian Information</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Parent/Guardian Information
+          </h2>
 
           <div>
-            <label htmlFor="parent_guardian_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="parent_guardian_name"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Name
             </label>
             <input
@@ -308,7 +367,10 @@ export default function EditStudentPage({ params }: { params: { studentId: strin
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label htmlFor="parent_guardian_email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="parent_guardian_email"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
                 Email
               </label>
               <input
@@ -322,7 +384,10 @@ export default function EditStudentPage({ params }: { params: { studentId: strin
             </div>
 
             <div>
-              <label htmlFor="parent_guardian_phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="parent_guardian_phone"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
                 Phone
               </label>
               <input
@@ -337,7 +402,10 @@ export default function EditStudentPage({ params }: { params: { studentId: strin
           </div>
 
           <div>
-            <label htmlFor="student_email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="student_email"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Student Email
             </label>
             <input
@@ -352,10 +420,15 @@ export default function EditStudentPage({ params }: { params: { studentId: strin
         </div>
 
         <div className="space-y-4 border-t border-gray-200 pt-6 dark:border-gray-800">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Priorities & Notes</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Priorities & Notes
+          </h2>
 
           <div>
-            <label htmlFor="current_priorities" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="current_priorities"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Current Priorities
             </label>
             <textarea
@@ -369,7 +442,10 @@ export default function EditStudentPage({ params }: { params: { studentId: strin
           </div>
 
           <div>
-            <label htmlFor="scheduling_notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="scheduling_notes"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Scheduling Notes
             </label>
             <textarea
@@ -383,7 +459,10 @@ export default function EditStudentPage({ params }: { params: { studentId: strin
           </div>
 
           <div>
-            <label htmlFor="tutor_notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="tutor_notes"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Tutor Notes (Private)
             </label>
             <textarea
@@ -397,7 +476,10 @@ export default function EditStudentPage({ params }: { params: { studentId: strin
           </div>
 
           <div>
-            <label htmlFor="external_platform_notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="external_platform_notes"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               External Platform Notes
             </label>
             <textarea
@@ -412,10 +494,15 @@ export default function EditStudentPage({ params }: { params: { studentId: strin
         </div>
 
         <div className="space-y-4 border-t border-gray-200 pt-6 dark:border-gray-800">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Resources</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Resources
+          </h2>
 
           <div>
-            <label htmlFor="student_site_url" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="student_site_url"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Student Site URL
             </label>
             <input
@@ -429,7 +516,10 @@ export default function EditStudentPage({ params }: { params: { studentId: strin
           </div>
 
           <div>
-            <label htmlFor="github_repo_url" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="github_repo_url"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               GitHub Repository URL
             </label>
             <input

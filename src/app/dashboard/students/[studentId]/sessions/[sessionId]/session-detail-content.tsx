@@ -5,12 +5,26 @@ import { useRouter } from 'next/navigation';
 import { updateSession, completeSession } from '@/server/actions/sessions';
 import { getClientErrorMessage } from '@/lib/errors/app-error';
 
+interface Session {
+  id: string;
+  scheduled_start: string;
+  scheduled_end: string;
+  status: string;
+  planned_focus?: string | null;
+  actual_focus?: string | null;
+  pre_session_notes?: string | null;
+  session_notes?: string | null;
+  parent_summary?: string | null;
+  next_steps?: string | null;
+  follow_up_tasks?: string | null;
+  lesson_url?: string | null;
+  duration_minutes?: number | null;
+}
+
 export function SessionDetailContent({
-  studentId,
   session,
 }: {
-  studentId: string;
-  session: any;
+  session: Session;
 }) {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
@@ -28,7 +42,9 @@ export function SessionDetailContent({
     lesson_url: session.lesson_url || '',
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -104,25 +120,27 @@ export function SessionDetailContent({
               session.status === 'completed'
                 ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200'
                 : session.status === 'planned'
-                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200'
-                : session.status === 'ready'
-                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200'
-                : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200'
+                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200'
+                  : session.status === 'ready'
+                    ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200'
+                    : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200'
             }`}
           >
             {session.status}
           </span>
         </div>
         <div className="flex gap-2">
-          {session.status !== 'completed' && session.status !== 'cancelled' && session.status !== 'no_show' && (
-            <button
-              onClick={handleComplete}
-              disabled={isSubmitting}
-              className="rounded-lg bg-green-600 px-4 py-2 font-medium text-white transition-colors hover:bg-green-700 disabled:opacity-50"
-            >
-              {isSubmitting ? 'Completing...' : 'Complete'}
-            </button>
-          )}
+          {session.status !== 'completed' &&
+            session.status !== 'cancelled' &&
+            session.status !== 'no_show' && (
+              <button
+                onClick={handleComplete}
+                disabled={isSubmitting}
+                className="rounded-lg bg-green-600 px-4 py-2 font-medium text-white transition-colors hover:bg-green-700 disabled:opacity-50"
+              >
+                {isSubmitting ? 'Completing...' : 'Complete'}
+              </button>
+            )}
           <button
             onClick={() => setIsEditing(!isEditing)}
             className="rounded-lg border border-gray-300 px-4 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
@@ -136,19 +154,27 @@ export function SessionDetailContent({
       {!isEditing && (
         <div className="grid gap-6 md:grid-cols-2">
           <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
-            <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Session Schedule</h2>
+            <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+              Session Schedule
+            </h2>
             <div className="space-y-3 text-sm">
               <div>
-                <span className="font-medium text-gray-700 dark:text-gray-300">Start:</span>{' '}
+                <span className="font-medium text-gray-700 dark:text-gray-300">
+                  Start:
+                </span>{' '}
                 {new Date(session.scheduled_start).toLocaleString()}
               </div>
               <div>
-                <span className="font-medium text-gray-700 dark:text-gray-300">End:</span>{' '}
+                <span className="font-medium text-gray-700 dark:text-gray-300">
+                  End:
+                </span>{' '}
                 {new Date(session.scheduled_end).toLocaleString()}
               </div>
               {session.duration_minutes && (
                 <div>
-                  <span className="font-medium text-gray-700 dark:text-gray-300">Duration:</span>{' '}
+                  <span className="font-medium text-gray-700 dark:text-gray-300">
+                    Duration:
+                  </span>{' '}
                   {session.duration_minutes} minutes
                 </div>
               )}
@@ -156,47 +182,66 @@ export function SessionDetailContent({
           </div>
 
           <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
-            <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Focus & Notes</h2>
+            <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+              Focus & Notes
+            </h2>
             <div className="space-y-3 text-sm">
               {session.planned_focus && (
                 <div>
-                  <span className="font-medium text-gray-700 dark:text-gray-300">Planned Focus:</span>{' '}
+                  <span className="font-medium text-gray-700 dark:text-gray-300">
+                    Planned Focus:
+                  </span>{' '}
                   {session.planned_focus}
                 </div>
               )}
               {session.actual_focus && (
                 <div>
-                  <span className="font-medium text-gray-700 dark:text-gray-300">Actual Focus:</span>{' '}
+                  <span className="font-medium text-gray-700 dark:text-gray-300">
+                    Actual Focus:
+                  </span>{' '}
                   {session.actual_focus}
                 </div>
               )}
               {session.pre_session_notes && (
                 <div>
-                  <span className="font-medium text-gray-700 dark:text-gray-300">Pre-Session Notes:</span>{' '}
+                  <span className="font-medium text-gray-700 dark:text-gray-300">
+                    Pre-Session Notes:
+                  </span>{' '}
                   {session.pre_session_notes}
                 </div>
               )}
             </div>
           </div>
 
-          {(session.session_notes || session.parent_summary || session.next_steps) && (
+          {(session.session_notes ||
+            session.parent_summary ||
+            session.next_steps) && (
             <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
-              <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Session Summary</h2>
+              <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+                Session Summary
+              </h2>
               <div className="space-y-3 text-sm">
                 {session.session_notes && (
                   <div>
-                    <span className="font-medium text-gray-700 dark:text-gray-300">Notes:</span> {session.session_notes}
+                    <span className="font-medium text-gray-700 dark:text-gray-300">
+                      Notes:
+                    </span>{' '}
+                    {session.session_notes}
                   </div>
                 )}
                 {session.parent_summary && (
                   <div>
-                    <span className="font-medium text-gray-700 dark:text-gray-300">Parent Summary:</span>{' '}
+                    <span className="font-medium text-gray-700 dark:text-gray-300">
+                      Parent Summary:
+                    </span>{' '}
                     {session.parent_summary}
                   </div>
                 )}
                 {session.next_steps && (
                   <div>
-                    <span className="font-medium text-gray-700 dark:text-gray-300">Next Steps:</span>{' '}
+                    <span className="font-medium text-gray-700 dark:text-gray-300">
+                      Next Steps:
+                    </span>{' '}
                     {session.next_steps}
                   </div>
                 )}
@@ -206,17 +251,23 @@ export function SessionDetailContent({
 
           {(session.follow_up_tasks || session.lesson_url) && (
             <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
-              <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Follow-up</h2>
+              <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+                Follow-up
+              </h2>
               <div className="space-y-3 text-sm">
                 {session.follow_up_tasks && (
                   <div>
-                    <span className="font-medium text-gray-700 dark:text-gray-300">Tasks:</span>{' '}
+                    <span className="font-medium text-gray-700 dark:text-gray-300">
+                      Tasks:
+                    </span>{' '}
                     {session.follow_up_tasks}
                   </div>
                 )}
                 {session.lesson_url && (
                   <div>
-                    <span className="font-medium text-gray-700 dark:text-gray-300">Lesson:</span>{' '}
+                    <span className="font-medium text-gray-700 dark:text-gray-300">
+                      Lesson:
+                    </span>{' '}
                     <a
                       href={session.lesson_url}
                       target="_blank"
@@ -235,9 +286,15 @@ export function SessionDetailContent({
 
       {/* Edit Form */}
       {isEditing && (
-        <form onSubmit={handleSubmit} className="space-y-6 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-6 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900"
+        >
           <div>
-            <label htmlFor="planned_focus" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="planned_focus"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Planned Focus
             </label>
             <textarea
@@ -251,7 +308,10 @@ export function SessionDetailContent({
           </div>
 
           <div>
-            <label htmlFor="actual_focus" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="actual_focus"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Actual Focus
             </label>
             <textarea
@@ -265,7 +325,10 @@ export function SessionDetailContent({
           </div>
 
           <div>
-            <label htmlFor="pre_session_notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="pre_session_notes"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Pre-Session Notes
             </label>
             <textarea
@@ -279,7 +342,10 @@ export function SessionDetailContent({
           </div>
 
           <div>
-            <label htmlFor="session_notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="session_notes"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Session Notes
             </label>
             <textarea
@@ -293,7 +359,10 @@ export function SessionDetailContent({
           </div>
 
           <div>
-            <label htmlFor="parent_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="parent_summary"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Parent Summary
             </label>
             <textarea
@@ -307,7 +376,10 @@ export function SessionDetailContent({
           </div>
 
           <div>
-            <label htmlFor="next_steps" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="next_steps"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Next Steps
             </label>
             <textarea
@@ -321,7 +393,10 @@ export function SessionDetailContent({
           </div>
 
           <div>
-            <label htmlFor="follow_up_tasks" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="follow_up_tasks"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Follow-up Tasks
             </label>
             <textarea
@@ -335,7 +410,10 @@ export function SessionDetailContent({
           </div>
 
           <div>
-            <label htmlFor="lesson_url" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="lesson_url"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Lesson URL
             </label>
             <input

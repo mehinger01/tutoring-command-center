@@ -7,8 +7,6 @@ import { AppError, ErrorCode } from '@/lib/errors/app-error';
 import {
   createIntakeSchema,
   updateIntakeSchema,
-  CreateIntakeInput,
-  UpdateIntakeInput,
 } from '@/lib/validation/students';
 
 export async function createIntake(studentId: string, input: unknown) {
@@ -48,7 +46,11 @@ export async function createIntake(studentId: string, input: unknown) {
     .single();
 
   if (error) {
-    throw new AppError(`Failed to create intake: ${error.message}`, ErrorCode.INTERNAL_ERROR, 500);
+    throw new AppError(
+      `Failed to create intake: ${error.message}`,
+      ErrorCode.INTERNAL_SERVER_ERROR,
+      500
+    );
   }
 
   return data;
@@ -76,7 +78,11 @@ export async function getIntakes(studentId: string) {
     .order('created_at', { ascending: false });
 
   if (error) {
-    throw new AppError(`Failed to fetch intakes: ${error.message}`, ErrorCode.INTERNAL_ERROR, 500);
+    throw new AppError(
+      `Failed to fetch intakes: ${error.message}`,
+      ErrorCode.INTERNAL_SERVER_ERROR,
+      500
+    );
   }
 
   return data || [];
@@ -102,7 +108,11 @@ export async function getIntakeById(intakeId: string) {
   }
 
   if (error) {
-    throw new AppError(`Failed to fetch intake: ${error.message}`, ErrorCode.INTERNAL_ERROR, 500);
+    throw new AppError(
+      `Failed to fetch intake: ${error.message}`,
+      ErrorCode.INTERNAL_SERVER_ERROR,
+      500
+    );
   }
 
   return data;
@@ -144,7 +154,11 @@ export async function updateIntake(intakeId: string, input: unknown) {
     .single();
 
   if (error) {
-    throw new AppError(`Failed to update intake: ${error.message}`, ErrorCode.INTERNAL_ERROR, 500);
+    throw new AppError(
+      `Failed to update intake: ${error.message}`,
+      ErrorCode.INTERNAL_SERVER_ERROR,
+      500
+    );
   }
 
   return data;

@@ -1,6 +1,11 @@
 import { z } from 'zod';
 
-export const studentStatusSchema = z.enum(['intake', 'active', 'paused', 'archived']);
+export const studentStatusSchema = z.enum([
+  'intake',
+  'active',
+  'paused',
+  'archived',
+]);
 
 export const createStudentSchema = z.object({
   first_name: z.string().min(1, 'First name is required').max(255),
@@ -50,12 +55,18 @@ export const updateIntakeSchema = createIntakeSchema.partial();
 export type CreateIntakeInput = z.infer<typeof createIntakeSchema>;
 export type UpdateIntakeInput = z.infer<typeof updateIntakeSchema>;
 
-export const sessionStatusSchema = z.enum(['planned', 'ready', 'completed', 'cancelled', 'no_show']);
+export const sessionStatusSchema = z.enum([
+  'planned',
+  'ready',
+  'completed',
+  'cancelled',
+  'no_show',
+]);
 
-export const createSessionSchema = z.object({
-  scheduled_start: z.coerce.date(),
-  scheduled_end: z.coerce.date(),
-  status: sessionStatusSchema.default('planned'),
+const sessionBaseSchema = z.object({
+  scheduled_start: z.coerce.date().optional(),
+  scheduled_end: z.coerce.date().optional(),
+  status: sessionStatusSchema.optional(),
   planned_focus: z.string().nullable().optional(),
   actual_focus: z.string().nullable().optional(),
   pre_session_notes: z.string().nullable().optional(),
@@ -65,12 +76,29 @@ export const createSessionSchema = z.object({
   follow_up_tasks: z.string().nullable().optional(),
   lesson_url: z.string().url().nullable().optional(),
   duration_minutes: z.number().int().positive().nullable().optional(),
-}).refine((data) => data.scheduled_end > data.scheduled_start, {
-  message: 'Session end must be after start',
-  path: ['scheduled_end'],
 });
 
-export const updateSessionSchema = createSessionSchema.partial();
+export const createSessionSchema = z
+  .object({
+    scheduled_start: z.coerce.date(),
+    scheduled_end: z.coerce.date(),
+    status: sessionStatusSchema.default('planned'),
+    planned_focus: z.string().nullable().optional(),
+    actual_focus: z.string().nullable().optional(),
+    pre_session_notes: z.string().nullable().optional(),
+    session_notes: z.string().nullable().optional(),
+    parent_summary: z.string().nullable().optional(),
+    next_steps: z.string().nullable().optional(),
+    follow_up_tasks: z.string().nullable().optional(),
+    lesson_url: z.string().url().nullable().optional(),
+    duration_minutes: z.number().int().positive().nullable().optional(),
+  })
+  .refine((data) => data.scheduled_end > data.scheduled_start, {
+    message: 'Session end must be after start',
+    path: ['scheduled_end'],
+  });
+
+export const updateSessionSchema = sessionBaseSchema;
 
 export type CreateSessionInput = z.infer<typeof createSessionSchema>;
 export type UpdateSessionInput = z.infer<typeof updateSessionSchema>;

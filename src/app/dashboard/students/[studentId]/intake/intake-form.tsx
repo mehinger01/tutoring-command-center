@@ -44,7 +44,8 @@ export function IntakeForm({ studentId }: { studentId: string }) {
         parent_concerns: formData.parent_concerns || undefined,
         student_concerns: formData.student_concerns || undefined,
         academic_needs: formData.academic_needs || undefined,
-        executive_function_needs: formData.executive_function_needs || undefined,
+        executive_function_needs:
+          formData.executive_function_needs || undefined,
         student_interests: formData.student_interests || undefined,
         accommodations: formData.accommodations || undefined,
         initial_goals: formData.initial_goals || undefined,
@@ -76,8 +77,13 @@ export function IntakeForm({ studentId }: { studentId: string }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
-      <h2 className="text-lg font-semibold text-gray-900 dark:text-white">New Intake Form</h2>
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-6 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900"
+    >
+      <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+        New Intake Form
+      </h2>
 
       {error && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200">
@@ -92,7 +98,10 @@ export function IntakeForm({ studentId }: { studentId: string }) {
       )}
 
       <div>
-        <label htmlFor="referral_source" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label
+          htmlFor="referral_source"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
           Referral Source
         </label>
         <textarea
@@ -107,7 +116,10 @@ export function IntakeForm({ studentId }: { studentId: string }) {
       </div>
 
       <div>
-        <label htmlFor="parent_concerns" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label
+          htmlFor="parent_concerns"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
           Parent Concerns
         </label>
         <textarea
@@ -122,7 +134,10 @@ export function IntakeForm({ studentId }: { studentId: string }) {
       </div>
 
       <div>
-        <label htmlFor="student_concerns" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label
+          htmlFor="student_concerns"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
           Student Concerns
         </label>
         <textarea
@@ -137,7 +152,10 @@ export function IntakeForm({ studentId }: { studentId: string }) {
       </div>
 
       <div>
-        <label htmlFor="academic_needs" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label
+          htmlFor="academic_needs"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
           Academic Needs
         </label>
         <textarea
@@ -152,7 +170,10 @@ export function IntakeForm({ studentId }: { studentId: string }) {
       </div>
 
       <div>
-        <label htmlFor="executive_function_needs" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label
+          htmlFor="executive_function_needs"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
           Executive Function Needs
         </label>
         <textarea
@@ -167,7 +188,10 @@ export function IntakeForm({ studentId }: { studentId: string }) {
       </div>
 
       <div>
-        <label htmlFor="student_interests" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label
+          htmlFor="student_interests"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
           Student Interests
         </label>
         <textarea
@@ -182,7 +206,10 @@ export function IntakeForm({ studentId }: { studentId: string }) {
       </div>
 
       <div>
-        <label htmlFor="accommodations" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label
+          htmlFor="accommodations"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
           Accommodations
         </label>
         <textarea
@@ -197,7 +224,10 @@ export function IntakeForm({ studentId }: { studentId: string }) {
       </div>
 
       <div>
-        <label htmlFor="initial_goals" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label
+          htmlFor="initial_goals"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
           Initial Goals *
         </label>
         <textarea
@@ -212,7 +242,10 @@ export function IntakeForm({ studentId }: { studentId: string }) {
       </div>
 
       <div>
-        <label htmlFor="assessment_plan" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label
+          htmlFor="assessment_plan"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
           Assessment Plan
         </label>
         <textarea
@@ -227,7 +260,10 @@ export function IntakeForm({ studentId }: { studentId: string }) {
       </div>
 
       <div>
-        <label htmlFor="package_notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label
+          htmlFor="package_notes"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
           Package Notes
         </label>
         <textarea
@@ -242,7 +278,10 @@ export function IntakeForm({ studentId }: { studentId: string }) {
       </div>
 
       <div>
-        <label htmlFor="scheduling_expectations" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label
+          htmlFor="scheduling_expectations"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
           Scheduling Expectations
         </label>
         <textarea

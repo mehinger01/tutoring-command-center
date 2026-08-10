@@ -40,9 +40,12 @@ export default async function IntakePage({
         >
           ← Back to {student.preferred_name || student.first_name}
         </Link>
-        <h1 className="mt-4 text-3xl font-bold text-gray-900 dark:text-white">Intake Forms</h1>
+        <h1 className="mt-4 text-3xl font-bold text-gray-900 dark:text-white">
+          Intake Forms
+        </h1>
         <p className="mt-2 text-gray-600 dark:text-gray-400">
-          Manage intake information for {student.preferred_name || student.first_name}
+          Manage intake information for{' '}
+          {student.preferred_name || student.first_name}
         </p>
       </div>
 
@@ -56,7 +59,9 @@ export default async function IntakePage({
 
       {intakes.length > 0 && (
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Intake History</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Intake History
+          </h2>
           <div className="grid gap-4">
             {intakes.map((intake) => (
               <div
@@ -81,13 +86,17 @@ export default async function IntakePage({
                 <div className="mt-4 space-y-2 text-sm">
                   {intake.initial_goals && (
                     <div>
-                      <span className="font-medium text-gray-700 dark:text-gray-300">Goals:</span>{' '}
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                        Goals:
+                      </span>{' '}
                       {intake.initial_goals}
                     </div>
                   )}
                   {intake.parent_concerns && (
                     <div>
-                      <span className="font-medium text-gray-700 dark:text-gray-300">Parent Concerns:</span>{' '}
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                        Parent Concerns:
+                      </span>{' '}
                       {intake.parent_concerns}
                     </div>
                   )}

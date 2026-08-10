@@ -26,7 +26,11 @@ export default function NewStudentPage() {
     start_date: '',
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -53,7 +57,9 @@ export default function NewStudentPage() {
         student_email: formData.student_email || undefined,
         current_priorities: formData.current_priorities || undefined,
         scheduling_notes: formData.scheduling_notes || undefined,
-        start_date: formData.start_date ? new Date(formData.start_date) : undefined,
+        start_date: formData.start_date
+          ? new Date(formData.start_date)
+          : undefined,
       });
 
       router.push('/dashboard/students');
@@ -73,10 +79,15 @@ export default function NewStudentPage() {
         >
           ← Back to Students
         </Link>
-        <h1 className="mt-4 text-3xl font-bold text-gray-900 dark:text-white">Add New Student</h1>
+        <h1 className="mt-4 text-3xl font-bold text-gray-900 dark:text-white">
+          Add New Student
+        </h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-6 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900"
+      >
         {error && (
           <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200">
             {error}
@@ -84,11 +95,16 @@ export default function NewStudentPage() {
         )}
 
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Basic Information</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Basic Information
+          </h2>
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label htmlFor="first_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="first_name"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
                 First Name *
               </label>
               <input
@@ -103,7 +119,10 @@ export default function NewStudentPage() {
             </div>
 
             <div>
-              <label htmlFor="last_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="last_name"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
                 Last Name
               </label>
               <input
@@ -118,7 +137,10 @@ export default function NewStudentPage() {
           </div>
 
           <div>
-            <label htmlFor="preferred_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="preferred_name"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Preferred Name
             </label>
             <input
@@ -133,7 +155,10 @@ export default function NewStudentPage() {
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="status"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
                 Status
               </label>
               <select
@@ -150,7 +175,10 @@ export default function NewStudentPage() {
             </div>
 
             <div>
-              <label htmlFor="start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="start_date"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
                 Start Date
               </label>
               <input
@@ -166,11 +194,16 @@ export default function NewStudentPage() {
         </div>
 
         <div className="space-y-4 border-t border-gray-200 pt-6 dark:border-gray-800">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Education</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Education
+          </h2>
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label htmlFor="school_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="school_name"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
                 School Name
               </label>
               <input
@@ -184,7 +217,10 @@ export default function NewStudentPage() {
             </div>
 
             <div>
-              <label htmlFor="grade_level" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="grade_level"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
                 Grade Level
               </label>
               <input
@@ -200,10 +236,15 @@ export default function NewStudentPage() {
         </div>
 
         <div className="space-y-4 border-t border-gray-200 pt-6 dark:border-gray-800">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Parent/Guardian Information</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Parent/Guardian Information
+          </h2>
 
           <div>
-            <label htmlFor="parent_guardian_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="parent_guardian_name"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Name
             </label>
             <input
@@ -218,7 +259,10 @@ export default function NewStudentPage() {
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label htmlFor="parent_guardian_email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="parent_guardian_email"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
                 Email
               </label>
               <input
@@ -232,7 +276,10 @@ export default function NewStudentPage() {
             </div>
 
             <div>
-              <label htmlFor="parent_guardian_phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="parent_guardian_phone"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
                 Phone
               </label>
               <input
@@ -247,7 +294,10 @@ export default function NewStudentPage() {
           </div>
 
           <div>
-            <label htmlFor="student_email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="student_email"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Student Email
             </label>
             <input
@@ -262,10 +312,15 @@ export default function NewStudentPage() {
         </div>
 
         <div className="space-y-4 border-t border-gray-200 pt-6 dark:border-gray-800">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Priorities & Notes</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Priorities & Notes
+          </h2>
 
           <div>
-            <label htmlFor="current_priorities" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="current_priorities"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Current Priorities
             </label>
             <textarea
@@ -279,7 +334,10 @@ export default function NewStudentPage() {
           </div>
 
           <div>
-            <label htmlFor="scheduling_notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="scheduling_notes"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Scheduling Notes
             </label>
             <textarea

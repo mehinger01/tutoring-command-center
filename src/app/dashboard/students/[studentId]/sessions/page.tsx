@@ -31,10 +31,16 @@ export default async function SessionsPage({
   }
 
   const upcomingSessions = sessions.filter(
-    (s) => new Date(s.scheduled_start) > new Date() && s.status !== 'cancelled' && s.status !== 'no_show'
+    (s) =>
+      new Date(s.scheduled_start) > new Date() &&
+      s.status !== 'cancelled' &&
+      s.status !== 'no_show'
   );
   const pastSessions = sessions.filter(
-    (s) => new Date(s.scheduled_start) <= new Date() || s.status === 'cancelled' || s.status === 'no_show'
+    (s) =>
+      new Date(s.scheduled_start) <= new Date() ||
+      s.status === 'cancelled' ||
+      s.status === 'no_show'
   );
 
   return (
@@ -47,7 +53,9 @@ export default async function SessionsPage({
           >
             ← Back to {student.preferred_name || student.first_name}
           </Link>
-          <h1 className="mt-4 text-3xl font-bold text-gray-900 dark:text-white">Sessions</h1>
+          <h1 className="mt-4 text-3xl font-bold text-gray-900 dark:text-white">
+            Sessions
+          </h1>
         </div>
         <Link
           href={`/dashboard/students/${params.studentId}/sessions/new`}
@@ -69,7 +77,9 @@ export default async function SessionsPage({
           Upcoming Sessions ({upcomingSessions.length})
         </h2>
         {upcomingSessions.length === 0 ? (
-          <p className="text-gray-600 dark:text-gray-400">No upcoming sessions scheduled.</p>
+          <p className="text-gray-600 dark:text-gray-400">
+            No upcoming sessions scheduled.
+          </p>
         ) : (
           <div className="space-y-2">
             {upcomingSessions.map((session) => (
@@ -87,7 +97,9 @@ export default async function SessionsPage({
                     })}
                   </div>
                   {session.planned_focus && (
-                    <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">{session.planned_focus}</div>
+                    <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                      {session.planned_focus}
+                    </div>
                   )}
                 </div>
                 <span className="inline-block rounded-full bg-yellow-100 px-3 py-1 text-xs font-medium text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200">
@@ -114,10 +126,14 @@ export default async function SessionsPage({
               >
                 <div>
                   <div className="font-medium text-gray-900 dark:text-white">
-                    {new Date(session.completed_at || session.scheduled_start).toLocaleDateString()}
+                    {new Date(
+                      session.completed_at || session.scheduled_start
+                    ).toLocaleDateString()}
                   </div>
                   {session.session_notes && (
-                    <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">{session.session_notes}</div>
+                    <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                      {session.session_notes}
+                    </div>
                   )}
                 </div>
                 <span

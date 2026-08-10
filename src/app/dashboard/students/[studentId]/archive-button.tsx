@@ -5,12 +5,22 @@ import { useRouter } from 'next/navigation';
 import { archiveStudent, unarchiveStudent } from '@/server/actions/students';
 import { getClientErrorMessage } from '@/lib/errors/app-error';
 
-export function ArchiveButton({ studentId, isArchived }: { studentId: string; isArchived: boolean }) {
+export function ArchiveButton({
+  studentId,
+  isArchived,
+}: {
+  studentId: string;
+  isArchived: boolean;
+}) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleClick = async () => {
-    if (!confirm(`Are you sure you want to ${isArchived ? 'unarchive' : 'archive'} this student?`)) {
+    if (
+      !confirm(
+        `Are you sure you want to ${isArchived ? 'unarchive' : 'archive'} this student?`
+      )
+    ) {
       return;
     }
 

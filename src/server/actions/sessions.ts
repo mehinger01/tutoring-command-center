@@ -7,8 +7,6 @@ import { AppError, ErrorCode } from '@/lib/errors/app-error';
 import {
   createSessionSchema,
   updateSessionSchema,
-  CreateSessionInput,
-  UpdateSessionInput,
 } from '@/lib/validation/students';
 
 export async function createSession(studentId: string, input: unknown) {
@@ -49,7 +47,11 @@ export async function createSession(studentId: string, input: unknown) {
     .single();
 
   if (error) {
-    throw new AppError(`Failed to create session: ${error.message}`, ErrorCode.INTERNAL_ERROR, 500);
+    throw new AppError(
+      `Failed to create session: ${error.message}`,
+      ErrorCode.INTERNAL_SERVER_ERROR,
+      500
+    );
   }
 
   return data;
@@ -77,7 +79,11 @@ export async function getSessions(studentId: string) {
     .order('scheduled_start', { ascending: false });
 
   if (error) {
-    throw new AppError(`Failed to fetch sessions: ${error.message}`, ErrorCode.INTERNAL_ERROR, 500);
+    throw new AppError(
+      `Failed to fetch sessions: ${error.message}`,
+      ErrorCode.INTERNAL_SERVER_ERROR,
+      500
+    );
   }
 
   return data || [];
@@ -103,7 +109,11 @@ export async function getSessionById(sessionId: string) {
   }
 
   if (error) {
-    throw new AppError(`Failed to fetch session: ${error.message}`, ErrorCode.INTERNAL_ERROR, 500);
+    throw new AppError(
+      `Failed to fetch session: ${error.message}`,
+      ErrorCode.INTERNAL_SERVER_ERROR,
+      500
+    );
   }
 
   return data;
@@ -126,18 +136,29 @@ export async function updateSession(sessionId: string, input: unknown) {
   const validated = updateSessionSchema.partial().parse(input);
 
   const updateData: Record<string, unknown> = {};
-  if (validated.scheduled_start !== undefined) updateData.scheduled_start = validated.scheduled_start.toISOString();
-  if (validated.scheduled_end !== undefined) updateData.scheduled_end = validated.scheduled_end.toISOString();
+  if (validated.scheduled_start !== undefined)
+    updateData.scheduled_start = validated.scheduled_start.toISOString();
+  if (validated.scheduled_end !== undefined)
+    updateData.scheduled_end = validated.scheduled_end.toISOString();
   if (validated.status !== undefined) updateData.status = validated.status;
-  if (validated.planned_focus !== undefined) updateData.planned_focus = validated.planned_focus;
-  if (validated.actual_focus !== undefined) updateData.actual_focus = validated.actual_focus;
-  if (validated.pre_session_notes !== undefined) updateData.pre_session_notes = validated.pre_session_notes;
-  if (validated.session_notes !== undefined) updateData.session_notes = validated.session_notes;
-  if (validated.parent_summary !== undefined) updateData.parent_summary = validated.parent_summary;
-  if (validated.next_steps !== undefined) updateData.next_steps = validated.next_steps;
-  if (validated.follow_up_tasks !== undefined) updateData.follow_up_tasks = validated.follow_up_tasks;
-  if (validated.lesson_url !== undefined) updateData.lesson_url = validated.lesson_url;
-  if (validated.duration_minutes !== undefined) updateData.duration_minutes = validated.duration_minutes;
+  if (validated.planned_focus !== undefined)
+    updateData.planned_focus = validated.planned_focus;
+  if (validated.actual_focus !== undefined)
+    updateData.actual_focus = validated.actual_focus;
+  if (validated.pre_session_notes !== undefined)
+    updateData.pre_session_notes = validated.pre_session_notes;
+  if (validated.session_notes !== undefined)
+    updateData.session_notes = validated.session_notes;
+  if (validated.parent_summary !== undefined)
+    updateData.parent_summary = validated.parent_summary;
+  if (validated.next_steps !== undefined)
+    updateData.next_steps = validated.next_steps;
+  if (validated.follow_up_tasks !== undefined)
+    updateData.follow_up_tasks = validated.follow_up_tasks;
+  if (validated.lesson_url !== undefined)
+    updateData.lesson_url = validated.lesson_url;
+  if (validated.duration_minutes !== undefined)
+    updateData.duration_minutes = validated.duration_minutes;
 
   const { data, error } = await supabase
     .from('sessions')
@@ -147,7 +168,11 @@ export async function updateSession(sessionId: string, input: unknown) {
     .single();
 
   if (error) {
-    throw new AppError(`Failed to update session: ${error.message}`, ErrorCode.INTERNAL_ERROR, 500);
+    throw new AppError(
+      `Failed to update session: ${error.message}`,
+      ErrorCode.INTERNAL_SERVER_ERROR,
+      500
+    );
   }
 
   return data;
@@ -178,7 +203,11 @@ export async function completeSession(sessionId: string) {
     .single();
 
   if (error) {
-    throw new AppError(`Failed to complete session: ${error.message}`, ErrorCode.INTERNAL_ERROR, 500);
+    throw new AppError(
+      `Failed to complete session: ${error.message}`,
+      ErrorCode.INTERNAL_SERVER_ERROR,
+      500
+    );
   }
 
   return data;

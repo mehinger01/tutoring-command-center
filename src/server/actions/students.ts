@@ -6,8 +6,6 @@ import { AppError, ErrorCode } from '@/lib/errors/app-error';
 import {
   createStudentSchema,
   updateStudentSchema,
-  CreateStudentInput,
-  UpdateStudentInput,
 } from '@/lib/validation/students';
 
 export async function createStudent(input: unknown) {
@@ -48,7 +46,11 @@ export async function createStudent(input: unknown) {
     .single();
 
   if (error) {
-    throw new AppError(`Failed to create student: ${error.message}`, ErrorCode.INTERNAL_ERROR, 500);
+    throw new AppError(
+      `Failed to create student: ${error.message}`,
+      ErrorCode.INTERNAL_SERVER_ERROR,
+      500
+    );
   }
 
   return data;
@@ -70,7 +72,11 @@ export async function getStudents() {
     .order('created_at', { ascending: false });
 
   if (error) {
-    throw new AppError(`Failed to fetch students: ${error.message}`, ErrorCode.INTERNAL_ERROR, 500);
+    throw new AppError(
+      `Failed to fetch students: ${error.message}`,
+      ErrorCode.INTERNAL_SERVER_ERROR,
+      500
+    );
   }
 
   return data || [];
@@ -96,7 +102,11 @@ export async function getStudentById(studentId: string) {
   }
 
   if (error) {
-    throw new AppError(`Failed to fetch student: ${error.message}`, ErrorCode.INTERNAL_ERROR, 500);
+    throw new AppError(
+      `Failed to fetch student: ${error.message}`,
+      ErrorCode.INTERNAL_SERVER_ERROR,
+      500
+    );
   }
 
   return data;
@@ -146,7 +156,11 @@ export async function updateStudent(studentId: string, input: unknown) {
     .single();
 
   if (error) {
-    throw new AppError(`Failed to update student: ${error.message}`, ErrorCode.INTERNAL_ERROR, 500);
+    throw new AppError(
+      `Failed to update student: ${error.message}`,
+      ErrorCode.INTERNAL_SERVER_ERROR,
+      500
+    );
   }
 
   return data;
@@ -177,7 +191,11 @@ export async function archiveStudent(studentId: string) {
     .single();
 
   if (error) {
-    throw new AppError(`Failed to archive student: ${error.message}`, ErrorCode.INTERNAL_ERROR, 500);
+    throw new AppError(
+      `Failed to archive student: ${error.message}`,
+      ErrorCode.INTERNAL_SERVER_ERROR,
+      500
+    );
   }
 
   return data;
@@ -208,7 +226,11 @@ export async function unarchiveStudent(studentId: string) {
     .single();
 
   if (error) {
-    throw new AppError(`Failed to unarchive student: ${error.message}`, ErrorCode.INTERNAL_ERROR, 500);
+    throw new AppError(
+      `Failed to unarchive student: ${error.message}`,
+      ErrorCode.INTERNAL_SERVER_ERROR,
+      500
+    );
   }
 
   return data;

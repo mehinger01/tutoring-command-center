@@ -22,7 +22,11 @@ export default function NewSessionPage({
     pre_session_notes: '',
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -37,8 +41,12 @@ export default function NewSessionPage({
 
     try {
       await createSession(params.studentId, {
-        scheduled_start: formData.scheduled_start ? new Date(formData.scheduled_start) : new Date(),
-        scheduled_end: formData.scheduled_end ? new Date(formData.scheduled_end) : new Date(),
+        scheduled_start: formData.scheduled_start
+          ? new Date(formData.scheduled_start)
+          : new Date(),
+        scheduled_end: formData.scheduled_end
+          ? new Date(formData.scheduled_end)
+          : new Date(),
         status: formData.status,
         planned_focus: formData.planned_focus || undefined,
         pre_session_notes: formData.pre_session_notes || undefined,
@@ -61,10 +69,15 @@ export default function NewSessionPage({
         >
           ← Back to Sessions
         </Link>
-        <h1 className="mt-4 text-3xl font-bold text-gray-900 dark:text-white">Schedule New Session</h1>
+        <h1 className="mt-4 text-3xl font-bold text-gray-900 dark:text-white">
+          Schedule New Session
+        </h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-6 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900"
+      >
         {error && (
           <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200">
             {error}
@@ -72,11 +85,16 @@ export default function NewSessionPage({
         )}
 
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Session Details</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Session Details
+          </h2>
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label htmlFor="scheduled_start" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="scheduled_start"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
                 Start Date & Time *
               </label>
               <input
@@ -91,7 +109,10 @@ export default function NewSessionPage({
             </div>
 
             <div>
-              <label htmlFor="scheduled_end" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="scheduled_end"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
                 End Date & Time *
               </label>
               <input
@@ -107,7 +128,10 @@ export default function NewSessionPage({
           </div>
 
           <div>
-            <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="status"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Status
             </label>
             <select
@@ -126,7 +150,10 @@ export default function NewSessionPage({
           </div>
 
           <div>
-            <label htmlFor="planned_focus" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="planned_focus"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Planned Focus
             </label>
             <textarea
@@ -141,7 +168,10 @@ export default function NewSessionPage({
           </div>
 
           <div>
-            <label htmlFor="pre_session_notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="pre_session_notes"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               Pre-Session Notes
             </label>
             <textarea

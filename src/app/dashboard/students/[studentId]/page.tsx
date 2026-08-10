@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getAuthUser } from '@/lib/auth/actions';
-import { getStudentById, archiveStudent, unarchiveStudent } from '@/server/actions/students';
+import { getStudentById } from '@/server/actions/students';
 import { getIntakes } from '@/server/actions/intakes';
 import { getSessions } from '@/server/actions/sessions';
 import { getClientErrorMessage } from '@/lib/errors/app-error';
@@ -37,9 +37,14 @@ export default async function StudentDetailPage({
 
   const latestIntake = intakes.length > 0 ? intakes[0] : null;
   const upcomingSessions = sessions.filter(
-    (s) => new Date(s.scheduled_start) > new Date() && s.status !== 'cancelled' && s.status !== 'no_show'
+    (s) =>
+      new Date(s.scheduled_start) > new Date() &&
+      s.status !== 'cancelled' &&
+      s.status !== 'no_show'
   );
-  const completedSessions = sessions.filter((s) => s.status === 'completed').reverse();
+  const completedSessions = sessions
+    .filter((s) => s.status === 'completed')
+    .reverse();
 
   return (
     <div className="space-y-6">
@@ -72,32 +77,43 @@ export default async function StudentDetailPage({
           >
             Edit
           </Link>
-          <ArchiveButton studentId={params.studentId} isArchived={student.status === 'archived'} />
+          <ArchiveButton
+            studentId={params.studentId}
+            isArchived={student.status === 'archived'}
+          />
         </div>
       </div>
 
       {/* Overview Section */}
       <div className="grid gap-6 md:grid-cols-2">
         <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
-          <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Overview</h2>
+          <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+            Overview
+          </h2>
           <div className="space-y-3 text-sm">
             {student.school_name && (
               <div>
-                <span className="font-medium text-gray-700 dark:text-gray-300">School:</span>{' '}
+                <span className="font-medium text-gray-700 dark:text-gray-300">
+                  School:
+                </span>{' '}
                 {student.school_name}
               </div>
             )}
             {student.grade_level && (
               <div>
-                <span className="font-medium text-gray-700 dark:text-gray-300">Grade:</span>{' '}
+                <span className="font-medium text-gray-700 dark:text-gray-300">
+                  Grade:
+                </span>{' '}
                 {student.grade_level}
               </div>
             )}
             {student.tutoring_type && student.tutoring_type.length > 0 && (
               <div>
-                <span className="font-medium text-gray-700 dark:text-gray-300">Tutoring Type:</span>
+                <span className="font-medium text-gray-700 dark:text-gray-300">
+                  Tutoring Type:
+                </span>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {student.tutoring_type.map((type) => (
+                  {student.tutoring_type.map((type: string) => (
                     <span
                       key={type}
                       className="inline-block rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-200"
@@ -110,9 +126,11 @@ export default async function StudentDetailPage({
             )}
             {student.subjects && student.subjects.length > 0 && (
               <div>
-                <span className="font-medium text-gray-700 dark:text-gray-300">Subjects:</span>
+                <span className="font-medium text-gray-700 dark:text-gray-300">
+                  Subjects:
+                </span>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {student.subjects.map((subject) => (
+                  {student.subjects.map((subject: string) => (
                     <span
                       key={subject}
                       className="inline-block rounded bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-200"
@@ -125,7 +143,9 @@ export default async function StudentDetailPage({
             )}
             {student.start_date && (
               <div>
-                <span className="font-medium text-gray-700 dark:text-gray-300">Start Date:</span>{' '}
+                <span className="font-medium text-gray-700 dark:text-gray-300">
+                  Start Date:
+                </span>{' '}
                 {new Date(student.start_date).toLocaleDateString()}
               </div>
             )}
@@ -133,17 +153,23 @@ export default async function StudentDetailPage({
         </div>
 
         <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
-          <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Contact</h2>
+          <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+            Contact
+          </h2>
           <div className="space-y-3 text-sm">
             {student.parent_guardian_name && (
               <div>
-                <span className="font-medium text-gray-700 dark:text-gray-300">Guardian:</span>{' '}
+                <span className="font-medium text-gray-700 dark:text-gray-300">
+                  Guardian:
+                </span>{' '}
                 {student.parent_guardian_name}
               </div>
             )}
             {student.parent_guardian_email && (
               <div>
-                <span className="font-medium text-gray-700 dark:text-gray-300">Guardian Email:</span>{' '}
+                <span className="font-medium text-gray-700 dark:text-gray-300">
+                  Guardian Email:
+                </span>{' '}
                 <a
                   href={`mailto:${student.parent_guardian_email}`}
                   className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
@@ -154,7 +180,9 @@ export default async function StudentDetailPage({
             )}
             {student.parent_guardian_phone && (
               <div>
-                <span className="font-medium text-gray-700 dark:text-gray-300">Guardian Phone:</span>{' '}
+                <span className="font-medium text-gray-700 dark:text-gray-300">
+                  Guardian Phone:
+                </span>{' '}
                 <a
                   href={`tel:${student.parent_guardian_phone}`}
                   className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
@@ -165,7 +193,9 @@ export default async function StudentDetailPage({
             )}
             {student.student_email && (
               <div>
-                <span className="font-medium text-gray-700 dark:text-gray-300">Student Email:</span>{' '}
+                <span className="font-medium text-gray-700 dark:text-gray-300">
+                  Student Email:
+                </span>{' '}
                 <a
                   href={`mailto:${student.student_email}`}
                   className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
@@ -181,7 +211,9 @@ export default async function StudentDetailPage({
       {/* Links Section */}
       {(student.student_site_url || student.github_repo_url) && (
         <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
-          <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Resources</h2>
+          <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+            Resources
+          </h2>
           <div className="flex flex-wrap gap-4">
             {student.student_site_url && (
               <a
@@ -211,7 +243,9 @@ export default async function StudentDetailPage({
       {latestIntake && (
         <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Latest Intake</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Latest Intake
+            </h2>
             <Link
               href={`/dashboard/students/${params.studentId}/intake`}
               className="text-sm text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
@@ -222,18 +256,25 @@ export default async function StudentDetailPage({
           <div className="mt-4 space-y-2 text-sm">
             {latestIntake.initial_goals && (
               <div>
-                <span className="font-medium text-gray-700 dark:text-gray-300">Goals:</span> {latestIntake.initial_goals}
+                <span className="font-medium text-gray-700 dark:text-gray-300">
+                  Goals:
+                </span>{' '}
+                {latestIntake.initial_goals}
               </div>
             )}
             {latestIntake.parent_concerns && (
               <div>
-                <span className="font-medium text-gray-700 dark:text-gray-300">Parent Concerns:</span>{' '}
+                <span className="font-medium text-gray-700 dark:text-gray-300">
+                  Parent Concerns:
+                </span>{' '}
                 {latestIntake.parent_concerns}
               </div>
             )}
             {latestIntake.accommodations && (
               <div>
-                <span className="font-medium text-gray-700 dark:text-gray-300">Accommodations:</span>{' '}
+                <span className="font-medium text-gray-700 dark:text-gray-300">
+                  Accommodations:
+                </span>{' '}
                 {latestIntake.accommodations}
               </div>
             )}
@@ -255,7 +296,9 @@ export default async function StudentDetailPage({
           </Link>
         </div>
         {upcomingSessions.length === 0 ? (
-          <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">No upcoming sessions scheduled.</p>
+          <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">
+            No upcoming sessions scheduled.
+          </p>
         ) : (
           <div className="mt-4 space-y-2">
             {upcomingSessions.map((session) => (
@@ -266,10 +309,15 @@ export default async function StudentDetailPage({
               >
                 <div className="font-medium text-gray-900 dark:text-white">
                   {new Date(session.scheduled_start).toLocaleDateString()} at{' '}
-                  {new Date(session.scheduled_start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {new Date(session.scheduled_start).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
                 </div>
                 {session.planned_focus && (
-                  <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">{session.planned_focus}</div>
+                  <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    {session.planned_focus}
+                  </div>
                 )}
               </Link>
             ))}
@@ -291,10 +339,14 @@ export default async function StudentDetailPage({
                 className="block rounded border border-gray-200 p-3 transition-colors hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800"
               >
                 <div className="font-medium text-gray-900 dark:text-white">
-                  {new Date(session.completed_at || session.scheduled_start).toLocaleDateString()}
+                  {new Date(
+                    session.completed_at || session.scheduled_start
+                  ).toLocaleDateString()}
                 </div>
                 {session.session_notes && (
-                  <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">{session.session_notes}</div>
+                  <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    {session.session_notes}
+                  </div>
                 )}
               </Link>
             ))}
