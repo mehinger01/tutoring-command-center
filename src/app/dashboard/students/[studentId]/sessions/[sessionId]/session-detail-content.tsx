@@ -21,11 +21,7 @@ interface Session {
   duration_minutes?: number | null;
 }
 
-export function SessionDetailContent({
-  session,
-}: {
-  session: Session;
-}) {
+export function SessionDetailContent({ session }: { session: Session }) {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
