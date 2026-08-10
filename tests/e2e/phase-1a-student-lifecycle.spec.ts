@@ -77,7 +77,9 @@ test.describe('Phase 1A: Student Lifecycle', () => {
       // Wait for page to load
       await page.waitForLoadState('networkidle');
       // Verify that the students list has content (heading should be visible)
-      await expect(page.locator('h1').filter({ hasText: 'Students' })).toBeVisible();
+      await expect(
+        page.locator('h1').filter({ hasText: 'Students' })
+      ).toBeVisible();
     });
 
     test('user can view student detail page', async ({ page }) => {
@@ -97,7 +99,9 @@ test.describe('Phase 1A: Student Lifecycle', () => {
       await expect(page).toHaveURL('/dashboard/students');
 
       // Get the student ID from the URL after creation (last link clicked)
-      const studentLinks = await page.locator('a:has-text("Detail Test Student")').all();
+      const studentLinks = await page
+        .locator('a:has-text("Detail Test Student")')
+        .all();
       if (studentLinks.length === 0) throw new Error('Student not found');
       await studentLinks[0].click();
 
@@ -129,7 +133,9 @@ test.describe('Phase 1A: Student Lifecycle', () => {
       await expect(page).toHaveURL('/dashboard/students');
 
       // Navigate to the student and edit
-      const studentLinks = await page.locator('a:has-text("Edit Test Student")').all();
+      const studentLinks = await page
+        .locator('a:has-text("Edit Test Student")')
+        .all();
       if (studentLinks.length === 0) throw new Error('Student not found');
       await studentLinks[0].click();
 
@@ -182,32 +188,42 @@ test.describe('Phase 1A: Student Lifecycle', () => {
 
       // Archive the student
       // Set up a listener for the confirm dialog
-      page.once('dialog', dialog => {
+      page.once('dialog', (dialog) => {
         dialog.accept();
       });
 
-      const archiveButton = page.locator('button').filter({ hasText: 'Archive' }).first();
+      const archiveButton = page
+        .locator('button')
+        .filter({ hasText: 'Archive' })
+        .first();
       await archiveButton.click();
 
       // Wait for the router.refresh() to complete
       await page.waitForLoadState('networkidle');
 
       // Should show Unarchive button now
-      await expect(page.locator('button').filter({ hasText: 'Unarchive' }).first()).toBeVisible({ timeout: 10000 });
+      await expect(
+        page.locator('button').filter({ hasText: 'Unarchive' }).first()
+      ).toBeVisible({ timeout: 10000 });
 
       // Unarchive the student
-      page.once('dialog', dialog => {
+      page.once('dialog', (dialog) => {
         dialog.accept();
       });
 
-      const unarchiveButton = page.locator('button').filter({ hasText: 'Unarchive' }).first();
+      const unarchiveButton = page
+        .locator('button')
+        .filter({ hasText: 'Unarchive' })
+        .first();
       await unarchiveButton.click();
 
       // Wait for the refresh to complete
       await page.waitForLoadState('networkidle');
 
       // Should show Archive button again
-      await expect(page.locator('button').filter({ hasText: 'Archive' }).first()).toBeVisible();
+      await expect(
+        page.locator('button').filter({ hasText: 'Archive' }).first()
+      ).toBeVisible();
 
       await supabase.auth.signOut();
     });
