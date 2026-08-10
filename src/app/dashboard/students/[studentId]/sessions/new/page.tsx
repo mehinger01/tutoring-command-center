@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { use, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createSession } from '@/server/actions/sessions';
@@ -9,8 +9,9 @@ import { getClientErrorMessage } from '@/lib/errors/app-error';
 export default function NewSessionPage({
   params,
 }: {
-  params: { studentId: string };
+  params: Promise<{ studentId: string }>;
 }) {
+  const { studentId } = use(params);
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +41,7 @@ export default function NewSessionPage({
     setIsSubmitting(true);
 
     try {
-      await createSession(params.studentId, {
+      await createSession(studentId, {
         scheduled_start: formData.scheduled_start
           ? new Date(formData.scheduled_start)
           : new Date(),
@@ -52,7 +53,7 @@ export default function NewSessionPage({
         pre_session_notes: formData.pre_session_notes || undefined,
       });
 
-      router.push(`/dashboard/students/${params.studentId}/sessions`);
+      router.push(`/dashboard/students/${studentId}/sessions`);
     } catch (err) {
       setError(getClientErrorMessage(err));
     } finally {
@@ -64,7 +65,7 @@ export default function NewSessionPage({
     <div className="max-w-2xl">
       <div className="mb-6">
         <Link
-          href={`/dashboard/students/${params.studentId}/sessions`}
+          href={`/dashboard/students/${studentId}/sessions`}
           className="text-sm text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
         >
           ← Back to Sessions
@@ -195,7 +196,7 @@ export default function NewSessionPage({
             {isSubmitting ? 'Scheduling...' : 'Schedule Session'}
           </button>
           <Link
-            href={`/dashboard/students/${params.studentId}/sessions`}
+            href={`/dashboard/students/${studentId}/sessions`}
             className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-center font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
           >
             Cancel

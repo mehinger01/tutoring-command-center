@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { use, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getStudentById, updateStudent } from '@/server/actions/students';
@@ -9,8 +9,9 @@ import { getClientErrorMessage } from '@/lib/errors/app-error';
 export default function EditStudentPage({
   params,
 }: {
-  params: { studentId: string };
+  params: Promise<{ studentId: string }>;
 }) {
+  const { studentId } = use(params);
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -40,7 +41,7 @@ export default function EditStudentPage({
   useEffect(() => {
     const fetchStudent = async () => {
       try {
-        const student = await getStudentById(params.studentId);
+        const student = await getStudentById(studentId);
         setFormData({
           first_name: student.first_name || '',
           last_name: student.last_name || '',
@@ -72,7 +73,7 @@ export default function EditStudentPage({
     };
 
     fetchStudent();
-  }, [params.studentId]);
+  }, [studentId]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -92,7 +93,7 @@ export default function EditStudentPage({
     setIsSubmitting(true);
 
     try {
-      await updateStudent(params.studentId, {
+      await updateStudent(studentId, {
         first_name: formData.first_name,
         last_name: formData.last_name || undefined,
         preferred_name: formData.preferred_name || undefined,
@@ -126,7 +127,7 @@ export default function EditStudentPage({
           : undefined,
       });
 
-      router.push(`/dashboard/students/${params.studentId}`);
+      router.push(`/dashboard/students/${studentId}`);
     } catch (err) {
       setError(getClientErrorMessage(err));
     } finally {
@@ -146,7 +147,7 @@ export default function EditStudentPage({
     <div className="max-w-2xl">
       <div className="mb-6">
         <Link
-          href={`/dashboard/students/${params.studentId}`}
+          href={`/dashboard/students/${studentId}`}
           className="text-sm text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
         >
           ← Back to Student
@@ -542,7 +543,7 @@ export default function EditStudentPage({
             {isSubmitting ? 'Saving...' : 'Save Changes'}
           </button>
           <Link
-            href={`/dashboard/students/${params.studentId}`}
+            href={`/dashboard/students/${studentId}`}
             className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-center font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
           >
             Cancel
