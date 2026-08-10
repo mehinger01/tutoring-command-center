@@ -876,12 +876,11 @@ test.describe('Phase 1A: Student Lifecycle', () => {
         .single();
       expect(beforeComplete?.last_session_date).toBeNull();
 
-      // Complete the session using RPC
+      // Complete the session using RPC (database is authoritative for timestamps)
       const { data: result, error } = await supabase.rpc(
         'complete_session_atomic',
         {
           p_session_id: session.id,
-          p_scheduled_start: session.scheduled_start,
         }
       );
 
@@ -939,10 +938,9 @@ test.describe('Phase 1A: Student Lifecycle', () => {
         .select()
         .single();
 
-      // Complete newer session
+      // Complete newer session (database handles timestamp from session row)
       await supabase.rpc('complete_session_atomic', {
         p_session_id: newerSession.id,
-        p_scheduled_start: newerSession.scheduled_start,
       });
 
       // Get last_session_date after completing newer session
@@ -970,10 +968,9 @@ test.describe('Phase 1A: Student Lifecycle', () => {
         .select()
         .single();
 
-      // Complete older session
+      // Complete older session (will not move last_session_date backward)
       await supabase.rpc('complete_session_atomic', {
         p_session_id: olderSession.id,
-        p_scheduled_start: olderSession.scheduled_start,
       });
 
       // Verify last_session_date did not move backward

@@ -186,16 +186,16 @@ export async function completeSession(sessionId: string) {
     throw new AppError('Unauthorized', ErrorCode.UNAUTHORIZED, 401);
   }
 
-  // Verify ownership and get session details
+  // Verify ownership
   const session = await getSessionById(sessionId);
   if (session.owner_id !== user.id) {
     throw new AppError('Forbidden', ErrorCode.FORBIDDEN, 403);
   }
 
-  // Call atomic RPC function that updates session and student in a single transaction
+  // Call atomic RPC function that handles all session completion logic
+  // Database is authoritative for session timestamps; only session ID is passed from client
   const { data, error } = await supabase.rpc('complete_session_atomic', {
     p_session_id: sessionId,
-    p_scheduled_start: session.scheduled_start,
   });
 
   if (error) {
