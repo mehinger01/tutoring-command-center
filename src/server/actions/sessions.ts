@@ -186,44 +186,21 @@ export async function completeSession(sessionId: string) {
     throw new AppError('Unauthorized', ErrorCode.UNAUTHORIZED, 401);
   }
 
-  // Verify ownership
+  // Verify ownership and get session details
   const session = await getSessionById(sessionId);
   if (session.owner_id !== user.id) {
     throw new AppError('Forbidden', ErrorCode.FORBIDDEN, 403);
   }
 
-  const completedAt = new Date().toISOString();
-
-  // Update session status and completion time
-  const { data, error } = await supabase
-    .from('sessions')
-    .update({
-      status: 'completed',
-      completed_at: completedAt,
-    })
-    .eq('id', sessionId)
-    .select()
-    .single();
+  // Call atomic RPC function that updates session and student in a single transaction
+  const { data, error } = await supabase.rpc('complete_session_atomic', {
+    p_session_id: sessionId,
+    p_scheduled_start: session.scheduled_start,
+  });
 
   if (error) {
     throw new AppError(
       `Failed to complete session: ${error.message}`,
-      ErrorCode.INTERNAL_SERVER_ERROR,
-      500
-    );
-  }
-
-  // Update student's last session date to maintain history
-  const { error: studentError } = await supabase
-    .from('students')
-    .update({
-      last_session_date: completedAt,
-    })
-    .eq('id', session.student_id);
-
-  if (studentError) {
-    throw new AppError(
-      `Failed to update student session date: ${studentError.message}`,
       ErrorCode.INTERNAL_SERVER_ERROR,
       500
     );

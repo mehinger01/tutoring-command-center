@@ -4,7 +4,7 @@ on:
   push:
     branches: [main, 'claude/**']
   pull_request:
-    branches: [main]
+    branches: [main, 'claude/**']
 
 permissions:
   contents: read
@@ -84,13 +84,38 @@ jobs:
 
       - name: Check for required E2E credentials
         run: |
-          if [ -z "${{ secrets.E2E_USER_A_EMAIL }}" ] || [ -z "${{ secrets.E2E_USER_A_PASSWORD }}" ] || [ -z "${{ secrets.E2E_USER_B_EMAIL }}" ] || [ -z "${{ secrets.E2E_USER_B_PASSWORD }}" ]; then
+          MISSING_SECRETS=()
+
+          if [ -z "${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" ]; then
+            MISSING_SECRETS+=("NEXT_PUBLIC_SUPABASE_URL")
+          fi
+
+          if [ -z "${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" ]; then
+            MISSING_SECRETS+=("NEXT_PUBLIC_SUPABASE_ANON_KEY")
+          fi
+
+          if [ -z "${{ secrets.E2E_USER_A_EMAIL }}" ]; then
+            MISSING_SECRETS+=("E2E_USER_A_EMAIL")
+          fi
+
+          if [ -z "${{ secrets.E2E_USER_A_PASSWORD }}" ]; then
+            MISSING_SECRETS+=("E2E_USER_A_PASSWORD")
+          fi
+
+          if [ -z "${{ secrets.E2E_USER_B_EMAIL }}" ]; then
+            MISSING_SECRETS+=("E2E_USER_B_EMAIL")
+          fi
+
+          if [ -z "${{ secrets.E2E_USER_B_PASSWORD }}" ]; then
+            MISSING_SECRETS+=("E2E_USER_B_PASSWORD")
+          fi
+
+          if [ ${#MISSING_SECRETS[@]} -gt 0 ]; then
             echo "ERROR: Required E2E test credentials are missing from GitHub secrets."
             echo "Please add the following secrets to the repository:"
-            echo "  - E2E_USER_A_EMAIL"
-            echo "  - E2E_USER_A_PASSWORD"
-            echo "  - E2E_USER_B_EMAIL"
-            echo "  - E2E_USER_B_PASSWORD"
+            for secret in "${MISSING_SECRETS[@]}"; do
+              echo "  - $secret"
+            done
             exit 1
           fi
 

@@ -831,7 +831,7 @@ test.describe('Phase 1A: Student Lifecycle', () => {
       await supabase.auth.signOut();
     });
 
-    test('completing a session updates student last_session_date', async () => {
+    test('completing a session updates student last_session_date with session scheduled_start', async () => {
       const supabase = createClient(SUPABASE_URL!, ANON_KEY!);
 
       // User A creates a student and session
@@ -851,7 +851,7 @@ test.describe('Phase 1A: Student Lifecycle', () => {
         .select()
         .single();
 
-      // Create a session with start/end in the past (so we can mark it completed)
+      // Create a session with start/end in the past
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
       const sessionEnd = new Date(yesterday.getTime() + 3600000);
@@ -876,30 +876,115 @@ test.describe('Phase 1A: Student Lifecycle', () => {
         .single();
       expect(beforeComplete?.last_session_date).toBeNull();
 
-      // Complete the session
-      const { data: completedSession } = await supabase
-        .from('sessions')
-        .update({ status: 'completed', completed_at: new Date().toISOString() })
-        .eq('id', session.id)
-        .select()
-        .single();
+      // Complete the session using RPC
+      const { data: result, error } = await supabase.rpc(
+        'complete_session_atomic',
+        {
+          p_session_id: session.id,
+          p_scheduled_start: session.scheduled_start,
+        }
+      );
 
-      // Manually update student's last_session_date (simulating what completeSession does)
-      if (completedSession?.completed_at) {
-        await supabase
-          .from('students')
-          .update({ last_session_date: completedSession.completed_at })
-          .eq('id', student.id);
-      }
+      expect(error).toBeNull();
+      expect(result).toBeTruthy();
 
-      // Verify student's last_session_date is now set
+      // Verify student's last_session_date is set to session.scheduled_start
       const { data: afterComplete } = await supabase
         .from('students')
         .select('last_session_date')
         .eq('id', student.id)
         .single();
       expect(afterComplete?.last_session_date).not.toBeNull();
-      expect(afterComplete?.last_session_date).toBeTruthy();
+      // Should match the session's scheduled_start, not the completion time
+      expect(new Date(afterComplete?.last_session_date)).toEqual(
+        new Date(session.scheduled_start)
+      );
+
+      await supabase.auth.signOut();
+    });
+
+    test('completing older session does not move last_session_date backward', async () => {
+      const supabase = createClient(SUPABASE_URL!, ANON_KEY!);
+
+      await supabase.auth.signInWithPassword({
+        email: USER_A_EMAIL!,
+        password: USER_A_PASSWORD!,
+      });
+
+      const userA = await supabase.auth.getUser();
+      const { data: student } = await supabase
+        .from('students')
+        .insert({
+          owner_id: userA.data.user!.id,
+          first_name: 'Backward Date Test',
+          status: 'active',
+        })
+        .select()
+        .single();
+
+      // Create and complete a newer session first
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowEnd = new Date(tomorrow.getTime() + 3600000);
+
+      const { data: newerSession } = await supabase
+        .from('sessions')
+        .insert({
+          owner_id: userA.data.user!.id,
+          student_id: student.id,
+          scheduled_start: tomorrow.toISOString(),
+          scheduled_end: tomorrowEnd.toISOString(),
+          status: 'planned',
+        })
+        .select()
+        .single();
+
+      // Complete newer session
+      await supabase.rpc('complete_session_atomic', {
+        p_session_id: newerSession.id,
+        p_scheduled_start: newerSession.scheduled_start,
+      });
+
+      // Get last_session_date after completing newer session
+      const { data: afterNewer } = await supabase
+        .from('students')
+        .select('last_session_date')
+        .eq('id', student.id)
+        .single();
+      const newerDate = new Date(afterNewer?.last_session_date);
+
+      // Create an older session
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayEnd = new Date(yesterday.getTime() + 3600000);
+
+      const { data: olderSession } = await supabase
+        .from('sessions')
+        .insert({
+          owner_id: userA.data.user!.id,
+          student_id: student.id,
+          scheduled_start: yesterday.toISOString(),
+          scheduled_end: yesterdayEnd.toISOString(),
+          status: 'planned',
+        })
+        .select()
+        .single();
+
+      // Complete older session
+      await supabase.rpc('complete_session_atomic', {
+        p_session_id: olderSession.id,
+        p_scheduled_start: olderSession.scheduled_start,
+      });
+
+      // Verify last_session_date did not move backward
+      const { data: afterOlder } = await supabase
+        .from('students')
+        .select('last_session_date')
+        .eq('id', student.id)
+        .single();
+      const finalDate = new Date(afterOlder?.last_session_date);
+
+      expect(finalDate).toEqual(newerDate);
 
       await supabase.auth.signOut();
     });
@@ -1005,6 +1090,180 @@ test.describe('Phase 1A: Student Lifecycle', () => {
       if (anonRead !== null) {
         expect(anonRead).toEqual([]);
       }
+    });
+
+    test('User A cannot create intake linked to User B student', async () => {
+      const supabase = createClient(SUPABASE_URL!, ANON_KEY!);
+
+      // User B creates a student
+      await supabase.auth.signInWithPassword({
+        email: USER_B_EMAIL!,
+        password: USER_B_PASSWORD!,
+      });
+
+      const userB = await supabase.auth.getUser();
+      const { data: studentB } = await supabase
+        .from('students')
+        .insert({
+          owner_id: userB.data.user!.id,
+          first_name: 'User B',
+          status: 'active',
+        })
+        .select()
+        .single();
+
+      await supabase.auth.signOut();
+
+      // User A tries to create intake linked to User B's student
+      await supabase.auth.signInWithPassword({
+        email: USER_A_EMAIL!,
+        password: USER_A_PASSWORD!,
+      });
+
+      const userA = await supabase.auth.getUser();
+      const { error } = await supabase.from('student_intakes').insert({
+        owner_id: userA.data.user!.id,
+        student_id: studentB.id,
+        initial_goals: 'Should be blocked by RLS',
+      });
+
+      // RLS should block this
+      expect(error).toBeTruthy();
+
+      await supabase.auth.signOut();
+    });
+
+    test('User B cannot create intake linked to User A student', async () => {
+      const supabase = createClient(SUPABASE_URL!, ANON_KEY!);
+
+      // User A creates a student
+      await supabase.auth.signInWithPassword({
+        email: USER_A_EMAIL!,
+        password: USER_A_PASSWORD!,
+      });
+
+      const userA = await supabase.auth.getUser();
+      const { data: studentA } = await supabase
+        .from('students')
+        .insert({
+          owner_id: userA.data.user!.id,
+          first_name: 'User A',
+          status: 'active',
+        })
+        .select()
+        .single();
+
+      await supabase.auth.signOut();
+
+      // User B tries to create intake linked to User A's student
+      await supabase.auth.signInWithPassword({
+        email: USER_B_EMAIL!,
+        password: USER_B_PASSWORD!,
+      });
+
+      const userB = await supabase.auth.getUser();
+      const { error } = await supabase.from('student_intakes').insert({
+        owner_id: userB.data.user!.id,
+        student_id: studentA.id,
+        initial_goals: 'Should be blocked by RLS',
+      });
+
+      // RLS should block this
+      expect(error).toBeTruthy();
+
+      await supabase.auth.signOut();
+    });
+
+    test('User A cannot create session linked to User B student', async () => {
+      const supabase = createClient(SUPABASE_URL!, ANON_KEY!);
+
+      // User B creates a student
+      await supabase.auth.signInWithPassword({
+        email: USER_B_EMAIL!,
+        password: USER_B_PASSWORD!,
+      });
+
+      const userB = await supabase.auth.getUser();
+      const { data: studentB } = await supabase
+        .from('students')
+        .insert({
+          owner_id: userB.data.user!.id,
+          first_name: 'User B',
+          status: 'active',
+        })
+        .select()
+        .single();
+
+      await supabase.auth.signOut();
+
+      // User A tries to create session linked to User B's student
+      await supabase.auth.signInWithPassword({
+        email: USER_A_EMAIL!,
+        password: USER_A_PASSWORD!,
+      });
+
+      const userA = await supabase.auth.getUser();
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      const { error } = await supabase.from('sessions').insert({
+        owner_id: userA.data.user!.id,
+        student_id: studentB.id,
+        scheduled_start: tomorrow.toISOString(),
+        scheduled_end: new Date(tomorrow.getTime() + 3600000).toISOString(),
+        status: 'planned',
+      });
+
+      // RLS should block this
+      expect(error).toBeTruthy();
+
+      await supabase.auth.signOut();
+    });
+
+    test('User B cannot create session linked to User A student', async () => {
+      const supabase = createClient(SUPABASE_URL!, ANON_KEY!);
+
+      // User A creates a student
+      await supabase.auth.signInWithPassword({
+        email: USER_A_EMAIL!,
+        password: USER_A_PASSWORD!,
+      });
+
+      const userA = await supabase.auth.getUser();
+      const { data: studentA } = await supabase
+        .from('students')
+        .insert({
+          owner_id: userA.data.user!.id,
+          first_name: 'User A',
+          status: 'active',
+        })
+        .select()
+        .single();
+
+      await supabase.auth.signOut();
+
+      // User B tries to create session linked to User A's student
+      await supabase.auth.signInWithPassword({
+        email: USER_B_EMAIL!,
+        password: USER_B_PASSWORD!,
+      });
+
+      const userB = await supabase.auth.getUser();
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      const { error } = await supabase.from('sessions').insert({
+        owner_id: userB.data.user!.id,
+        student_id: studentA.id,
+        scheduled_start: tomorrow.toISOString(),
+        scheduled_end: new Date(tomorrow.getTime() + 3600000).toISOString(),
+        status: 'planned',
+      });
+
+      // RLS should block this
+      expect(error).toBeTruthy();
+
+      await supabase.auth.signOut();
     });
   });
 
