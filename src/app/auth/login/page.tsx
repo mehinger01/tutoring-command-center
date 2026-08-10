@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { signInWithPassword } from '@/lib/auth/actions';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -14,14 +15,16 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // TODO: Implement authentication with Supabase
-      // For now, this is a placeholder for the authentication flow
-      console.log('Login attempt:', { email });
-      setError(
-        'Authentication not yet configured. See CLAUDE.md for setup instructions.'
-      );
+      const result = await signInWithPassword(email, password);
+      if (result.error) {
+        setError(result.error);
+      }
     } catch (err) {
-      setError('Authentication failed. Please try again.');
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Authentication failed. Please try again.';
+      setError(message);
       console.error('Login error:', err);
     } finally {
       setIsLoading(false);
@@ -41,7 +44,11 @@ export default function LoginPage() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="rounded-lg bg-red-50 p-4 text-sm text-red-700 dark:bg-red-950 dark:text-red-200">
+          <div
+            role="alert"
+            className="rounded-lg bg-red-50 p-4 text-sm text-red-700 dark:bg-red-950 dark:text-red-200"
+            data-testid="error-message"
+          >
             {error}
           </div>
         )}
